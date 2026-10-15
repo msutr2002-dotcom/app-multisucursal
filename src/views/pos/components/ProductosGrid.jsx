@@ -19,7 +19,7 @@ function precioTile(p) {
  * catálogo local (+ "Todos"). Tap = +1 al carrito (fusiona línea); productos
  * sin stock quedan atenuados y no cliqueables.
  */
-const ProductosGrid = ({ productos, onAgregar }) => {
+const ProductosGrid = ({ productos, stockPorProducto, onAgregar }) => {
   const [activa, setActiva] = useState('__todos__')
 
   const categorias = useMemo(() => {
@@ -68,7 +68,10 @@ const ProductosGrid = ({ productos, onAgregar }) => {
           style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))' }}
         >
           {visibles.map((p) => {
-            const stock = p.stock?.find((s) => s.es_actual)?.stock ?? 0
+            // D6: stock de la bodega activa; fallback al caché de sucursal.
+            const deBodega = stockPorProducto?.get(p.id)
+            const stock =
+              deBodega !== undefined ? deBodega : (p.stock?.find((s) => s.es_actual)?.stock ?? 0)
             const sinStock = stock <= 0
             return (
               <button

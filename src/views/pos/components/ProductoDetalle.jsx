@@ -16,7 +16,7 @@ import ImagenProducto from '../../../components/common/ImagenProducto'
  * (imagen + descripción en panel blanco), plegado por defecto. El remount por
  * `key={selected.id}` en POSPage lo reinicia al cambiar de producto.
  */
-const ProductoDetalle = ({ producto, onAgregar }) => {
+const ProductoDetalle = ({ producto, stockBodega, onAgregar }) => {
   const [cantidad, setCantidad] = useState(1)
   const [override, setOverride] = useState(null) // null = Auto
   const [abierto, setAbierto] = useState(false)
@@ -24,7 +24,9 @@ const ProductoDetalle = ({ producto, onAgregar }) => {
   const precios = useMemo(() => producto.precios || [], [producto.precios])
   const stockInfo = useMemo(() => producto.stock || [], [producto.stock])
   const actual = useMemo(() => stockInfo.find((s) => s.es_actual), [stockInfo])
-  const stockActual = actual?.stock ?? 0
+  // D6 (stock-bodega-fuente-verdad): manda el stock de la bodega activa; si esa
+  // bodega no tiene fila para el producto, se cae al caché de sucursal.
+  const stockActual = typeof stockBodega === 'number' ? stockBodega : (actual?.stock ?? 0)
   const otrasBodegas = useMemo(() => stockInfo.filter((s) => !s.es_actual), [stockInfo])
 
   const tier = useMemo(

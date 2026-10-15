@@ -6,8 +6,8 @@
     "requisitos": "Usuario con permiso inventario/ver; catálogo hidratado en IndexedDB para la sucursal activa",
     "datos": "Usuario alex/alex123 (Gerente, sucursal \"Ferromax chichi\"); empresa Ferromax con 2 productos (\"llave inlgesa\" y \"Fixture T9 Traslados\")",
     "esperado": "Título \"Inventario\" con contador \"N productos\"; columnas SKU, Producto, Categoría, Stock, Stock mín., Precio; paginación de 25 por página cuando hay más de 25 productos",
-    "real": "Inventario · contador \"2\" · columnas SKU, Producto, Categoría, Stock, Stock mín., Precio · 2 fila(s) · sin paginación: 2 productos ≤ 25 por página (solo se renderiza con más de 25)",
-    "estado": "Aprobado",
+    "real": "título esperado \"Inventario\" y se observó \"Gestión de Productos\"",
+    "estado": "Reprobado",
     "captura": "docs/capturas/CP-INV-001.png"
   },
   {
@@ -17,8 +17,8 @@
     "requisitos": "Inventario con productos (nombre \"llave inlgesa\" y SKU \"LLAVE\")",
     "datos": "Términos válidos: \"llave\" (nombre) y \"LLAVE\" (SKU); término sin coincidencias: \"SKU_INEXISTENTE_XYZ\"",
     "esperado": "La tabla filtra en memoria y vuelve a la página 1; sin coincidencias queda 0 productos con el mensaje de vacío; al limpiar se muestra el listado completo",
-    "real": "buscar \"llave\" → 1 fila (contador \"2→1\"); SKU \"LLAVE\" → 1 fila; \"SKU_INEXISTENTE_XYZ\" → 0 filas con contador \"0 productos\" y vacío=true; limpiar → 2 filas (listado completo)",
-    "estado": "Aprobado",
+    "real": "no hay productos que buscar en el inventario",
+    "estado": "Reprobado",
     "captura": "docs/capturas/CP-INV-002.png"
   },
   {
@@ -39,8 +39,8 @@
     "requisitos": "Producto con stock menor o igual al stock mínimo; permiso inventario/ver",
     "datos": "\"llave inlgesa\" en la sucursal activa (stock original 2, stock mínimo 0); se fija stock temporal 0 y se restaura el valor original",
     "esperado": "El stock se muestra con badge rojo (bg-danger) y texto \"Stock bajo\"; los demás productos quedan con badge verde",
-    "real": "llave inlgesa: stock local 2 → 0 (≤ mínimo 0); celda \"0Stock bajo\" con badge bg-danger + \"Stock bajo\"; Fixture T9 sin marca (badge verde); stock restaurado a 2 en el finally de este caso",
-    "estado": "Aprobado",
+    "real": "el producto \"llave\" no está en IndexedDB",
+    "estado": "Reprobado",
     "captura": "docs/capturas/CP-INV-004.png"
   },
   {
@@ -50,7 +50,7 @@
     "requisitos": "Sucursal sin productos en IndexedDB (catálogo local completamente vacío)",
     "datos": "Ninguno disponible: vaciar el catálogo local está prohibido porque alteraría datos del dispositivo",
     "esperado": "Se muestra el icono y el mensaje \"No hay productos en el inventario local\"; sin errores en consola",
-    "real": "No reproducible sin alterar datos: el caso exige una sucursal sin productos en IndexedDB y vaciar el catálogo local está prohibido (rompería el espejo offline y alteraría el dispositivo). Con el catálogo hidratado se observó: contador \"2\", 2 fila(s), mensaje de vacío=false. El mismo bloque de UI (\"No hay productos en el inventario local\") sí se llega a ver con filtros sin coincidencia (registrado en CP-INV-002), pero el escenario del caso (catálogo local vacío) no se pudo ejecutar",
+    "real": "No reproducible sin alterar datos: el caso exige una sucursal sin productos en IndexedDB y vaciar el catálogo local está prohibido (rompería el espejo offline y alteraría el dispositivo). Con el catálogo hidratado se observó: contador \"0\", 0 fila(s), mensaje de vacío=true. El mismo bloque de UI (\"No hay productos en el inventario local\") sí se llega a ver con filtros sin coincidencia (registrado en CP-INV-002), pero el escenario del caso (catálogo local vacío) no se pudo ejecutar",
     "estado": "Reprobado",
     "captura": "docs/capturas/CP-INV-005.png"
   },
@@ -72,8 +72,8 @@
     "requisitos": "Catálogo de la empresa hidratado con stock de más de una sucursal",
     "datos": "Sesión alex → id_sucursal 64b78a15 \"Ferromax chichi\"; la empresa también tiene stock en \"Ferromax quiche\" (c7bca165) en el mismo IndexedDB",
     "esperado": "Solo se muestra el stock de la sucursal del dispositivo (la de la sesión); nunca el de otra sucursal",
-    "real": "bodega principal=c146c24b-e665-44b0-b1ca-53c4a833b55a · sesión id_sucursal=64b78a15-7597-45c5-a984-c614b4847368 (Alex Simaj) · Fixture T9 Traslados: mostrado 9 = bodega principal · llave inlgesa: mostrado 2 = bodega principal · el dispositivo solo contiene filas de la bodega principal (no hay datos de otra bodega en IndexedDB)",
-    "estado": "Aprobado",
+    "real": "IndexedDB no tiene productos de la empresa para comparar",
+    "estado": "Reprobado",
     "captura": "docs/capturas/CP-INV-007.png"
   },
   {
@@ -83,8 +83,8 @@
     "requisitos": "Catálogo hidratado en IndexedDB y chunk lazy de la ruta ya cargado con red (regla del repo: sin red un import dinámico frío revienta)",
     "datos": "Red cortada con Network.emulateNetworkConditions offline=true",
     "esperado": "La vista carga desde IndexedDB sin bloquearse (contador y tabla visibles); sin botones de edición, solo lectura",
-    "real": "red cortada (navigator.onLine=false) → #/inventario renderizó en 3256 ms desde IndexedDB con contador \"2\" y 2 fila(s), idéntico a con red; sin botones de edición (solo lectura); spinner finalizado, sin bloqueo",
-    "estado": "Aprobado",
+    "real": "el inventario no tenía filas con red: no hay qué comparar sin conexión",
+    "estado": "Reprobado",
     "captura": "docs/capturas/CP-INV-008.png"
   }
 ]

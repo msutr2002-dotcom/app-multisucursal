@@ -57,11 +57,13 @@ const Login = () => {
 
     // Candidatos por username (mismo username permitido en distintas sucursales,
     // UNIQUE compuesto (id_sucursal, username)). Nota: id_sucursal se anida como
-    // objeto {id, id_empresa}; el UUID queda en id_sucursal.id.
+    // objeto {id, id_empresa}; el UUID queda en id_sucursal.id. Búsqueda
+    // case-insensitive: se escapan los comodines de ILIKE del input del usuario.
+    const usuarioBuscado = username.trim().replace(/[\\%_]/g, '\\$&')
     const { data: userCandidates, error: userError } = await supabase
       .from('users')
       .select('*, id_sucursal(id, id_empresa, name)')
-      .eq('username', username)
+      .ilike('username', usuarioBuscado)
 
     if (userError) {
       setAlertType('danger')

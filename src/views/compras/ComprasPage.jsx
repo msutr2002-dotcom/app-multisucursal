@@ -185,7 +185,8 @@ const ComprasPage = () => {
         setUnidadMap(Object.fromEntries(unidadesCat.map((u) => [u.id, u.name])))
         setProductosAlta(
           prods
-            .filter((p) => stockMap.has(p.id))
+            // Sin filtrar por productos_sucursal: un producto del catálogo sin
+            // fila de sucursal (recién creado) debe poder comprarse (stock 0).
             .map((p) => ({
               id: p.id,
               name: p.name,

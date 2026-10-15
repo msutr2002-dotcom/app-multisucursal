@@ -23,7 +23,7 @@ import ModalImpresionCotizacion from './components/ModalImpresionCotizacion'
 import ConflictResolverModal from './components/ConflictResolverModal'
 import ConfirmModal from '../dashboard/components/common/ConfirmModal'
 import { formatQ } from '../../utils/format'
-import { hidratarCatalogoParaSucursal } from '../../services/catalogSyncService'
+import { hidratarCatalogoParaSucursal, leerStockPorBodega } from '../../services/catalogSyncService'
 import { registrarVentaLocal } from '../../services/ventaLocalService'
 import { sincronizarEvento } from '../../services/colaSyncService'
 import {
@@ -122,6 +122,48 @@ const POSPage = () => {
     setBodegaId(id)
     localStorage.setItem('bodegaSeleccionada', id)
   }
+
+  // D6 (stock-bodega-fuente-verdad): stock de la bodega seleccionada para que el
+  // POS muestre/venda el mismo número que el Inventario de esa bodega. Con la
+  // Principal coincide con el caché de sucursal; con otra bodega, manda su stock.
+  const [stockBodega, setStockBodega] = useState(() => new Map())
+  const recargarStockBodega = useCallback(() => {
+    const fuente = bodegaId ? leerStockPorBodega(bodegaId) : Promise.resolve([])
+    return fuente
+      .then((filas) => {
+        const map = new Map()
+        filas.forEach((f) => map.set(f.id_producto, f.stock ?? 0))
+        setStockBodega(map)
+      })
+      .catch((err) => console.warn('No se pudo leer stock_bodega:', err))
+  }, [bodegaId])
+
+  useEffect(() => {
+    recargarStockBodega()
+  }, [recargarStockBodega])
+
+  // Refresca el stock por bodega al sincronizar/volver en línea (mismo patrón
+  // que el grid de comida), porque la venta/compra mueve stock_bodega.
+  useEffect(() => {
+    const refrescar = () => recargarStockBodega()
+    window.addEventListener('cola-sincronizada', refrescar)
+    window.addEventListener('online', refrescar)
+    return () => {
+      window.removeEventListener('cola-sincronizada', refrescar)
+      window.removeEventListener('online', refrescar)
+    }
+  }, [recargarStockBodega])
+
+  // Stock del producto en la bodega activa; si la bodega no tiene fila, se cae
+  // al caché de sucursal (`producto.stock` con `es_actual`) — spec D6.
+  const stockDeProducto = useCallback(
+    (p) => {
+      const deBodega = stockBodega.get(p.id)
+      if (deBodega !== undefined) return deBodega
+      return p.stock?.find((s) => s.es_actual)?.stock ?? 0
+    },
+    [stockBodega],
+  )
   const avisadosConflictosRef = useRef(new Set())
   const showToastRef = useRef(showToast)
   useEffect(() => {
@@ -194,8 +236,7 @@ const POSPage = () => {
 
   // Tap del grid: +1 con el tier Auto/NORMAL; addItem fusiona la línea existente.
   const agregarDelGrid = (p) => {
-    const stockActual = p.stock?.find((s) => s.es_actual)?.stock ?? 0
-    carrito.addItem({ ...p, stockActual }, 1, null)
+    carrito.addItem({ ...p, stockActual: stockDeProducto(p) }, 1, null)
   }
 
   // Sin loader: para la carga inicial del efecto.
@@ -468,6 +509,8 @@ const POSPage = () => {
       setModalCobro(false) // cierra sheet en móvil
       carrito.clear() // localStorage → []
       busqueda.clear()
+      // La venta descontó stock_bodega: refrescar el mapa de la bodega activa.
+      recargarStockBodega()
       setClienteVenta('')
       setNitClienteVenta('')
 
@@ -1028,17 +1071,25 @@ const POSPage = () => {
           )}
 
           {vistaComida ? (
-            <ProductosGrid productos={productosGrid} onAgregar={agregarDelGrid} />
+            <ProductosGrid
+              productos={productosGrid}
+              stockPorProducto={stockBodega}
+              onAgregar={agregarDelGrid}
+            />
           ) : selected ? (
             <div className="mt-3">
               <ProductoDetalle
                 key={selected.id}
                 producto={selected}
+                stockBodega={stockBodega.get(selected.id)}
                 idSucursalActual={idSucursal}
                 onAgregar={(cantidad, override) => {
-                  // FIX: selected trae stock como array; addItem necesita stockActual numérico
-                  const stockActual = selected.stock?.find((s) => s.es_actual)?.stock ?? 0
-                  carrito.addItem({ ...selected, stockActual }, cantidad, override)
+                  // Stock de la bodega activa (fallback al caché de sucursal — D6)
+                  carrito.addItem(
+                    { ...selected, stockActual: stockDeProducto(selected) },
+                    cantidad,
+                    override,
+                  )
                   busqueda.clear()
                   // El detalle se desmonta con el blur del botón: devolver el foco
                   // al buscador para el siguiente escaneo (ciclo scan→agregar).

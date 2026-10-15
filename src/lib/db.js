@@ -102,6 +102,13 @@ db.version(10).stores({
   stock_bodega: '[id_bodega+id_producto], id_producto',
 })
 
+// stock-bodega-fuente-verdad Task 3: se añade el índice `id_bodega` (faltaba)
+// para que `leerStockPorBodega` (`.where('id_bodega').equals(...)`) funcione.
+// Sin él la query lanzaba SchemaError y el Inventario/POS caían al catch → 0.
+db.version(11).stores({
+  stock_bodega: '[id_bodega+id_producto], id_bodega, id_producto',
+})
+
 export const getLocalDbStatus = async () => {
   const productosCount = await db.productos.count()
   const ventasPendientesSync = await db.cola_sincronizacion

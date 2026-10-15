@@ -383,6 +383,7 @@ const TrasladosPage = () => {
   const abrirAlta = () => {
     if (!puedeCrear) return
     setModoTraslado('entre_sucursales')
+    setIdBodegaOrigen(null)
     setIdBodegaDestino('')
     setIdDestino('')
     setSelProducto('')
@@ -884,6 +885,7 @@ const TrasladosPage = () => {
               size="sm"
               onClick={() => {
                 setModoTraslado('entre_sucursales')
+                setIdBodegaOrigen(null)
                 setIdBodegaDestino('')
                 setErroresAlta({})
               }}

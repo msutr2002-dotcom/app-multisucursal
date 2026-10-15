@@ -74,7 +74,7 @@ const Bodegas = () => {
       showToast('danger', 'Sin conexión', 'No se puede desactivar bodegas sin conexión')
       return { error: 'sin-conexion' }
     }
-    const { error } = await supabase.rpc('update_bodega', {
+    const { data, error } = await supabase.rpc('update_bodega', {
       p_id: bodega.id,
       p_name: bodega.name,
       p_es_principal: bodega.es_principal,
@@ -83,6 +83,11 @@ const Bodegas = () => {
     if (error) {
       showToast('danger', 'Error', error.message)
       return { error: error.message }
+    }
+    // El RPC devuelve {ok, mensaje}: rechaza desactivar la bodega Principal.
+    if (data && data.ok === false) {
+      showToast('danger', 'Error', data.mensaje || 'No se pudo desactivar la bodega')
+      return { error: data.mensaje }
     }
     cargarBodegas(filtroSucursal)
     showToast('success', 'Éxito', 'Bodega desactivada correctamente')

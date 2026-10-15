@@ -3,17 +3,14 @@ import { CCard, CBadge, CButton, CCollapse } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLayers, cilPen, cilBan, cilChevronRight } from '@coreui/icons'
 import ConfirmModal from '../../dashboard/components/common/ConfirmModal'
-import { useToast } from '../../../components/common/ToastContext'
 
 const BodegasCard = ({ bodega, onEditar, onDesactivar, puedeEditar, puedeEliminar }) => {
   const [abierto, setAbierto] = useState(false)
   const [modalConfirmar, setModalConfirmar] = useState(false)
-  const showToast = useToast()
 
   const confirmarDesactivar = async () => {
-    const resultado = await onDesactivar(bodega)
+    await onDesactivar(bodega)
     setModalConfirmar(false)
-    if (resultado?.ok) showToast('success', 'Éxito', 'Bodega desactivada correctamente')
   }
 
   return (
