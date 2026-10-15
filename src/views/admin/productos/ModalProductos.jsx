@@ -31,6 +31,7 @@ const vacio = {
   id_categoria: '',
   id_marca: '',
   id_proveedor: '',
+  id_color: '',
   precio_compra: '',
   tipo: 'bien',
   estado: 'disponible',
@@ -71,6 +72,7 @@ const ModalProductos = ({
           id_categoria: producto.id_categoria || '',
           id_marca: producto.id_marca || '',
           id_proveedor: producto.id_proveedor || '',
+          id_color: producto.id_color || '',
           precio_compra:
             producto.precio_compra != null ? (producto.precio_compra / 100).toFixed(2) : '',
           tipo: producto.tipo || 'bien',
@@ -241,7 +243,7 @@ const ModalProductos = ({
           </div>
 
           <CRow>
-            <CCol md={4} className="mb-3">
+            <CCol md={3} className="mb-3">
               <CFormLabel>Categoría</CFormLabel>
               <CFormSelect name="id_categoria" value={f.id_categoria} onChange={handleChange}>
                 <option value="">Sin categoría</option>
@@ -252,7 +254,7 @@ const ModalProductos = ({
                 ))}
               </CFormSelect>
             </CCol>
-            <CCol md={4} className="mb-3">
+            <CCol md={3} className="mb-3">
               <CFormLabel>Marca</CFormLabel>
               <CFormSelect name="id_marca" value={f.id_marca} onChange={handleChange}>
                 <option value="">Sin marca</option>
@@ -263,13 +265,24 @@ const ModalProductos = ({
                 ))}
               </CFormSelect>
             </CCol>
-            <CCol md={4} className="mb-3">
+            <CCol md={3} className="mb-3">
               <CFormLabel>Proveedor</CFormLabel>
               <CFormSelect name="id_proveedor" value={f.id_proveedor} onChange={handleChange}>
                 <option value="">Sin proveedor</option>
                 {(opciones.proveedores || []).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+            <CCol md={3} className="mb-3">
+              <CFormLabel>Color</CFormLabel>
+              <CFormSelect name="id_color" value={f.id_color} onChange={handleChange}>
+                <option value="">Sin color</option>
+                {(opciones.colores || []).map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </CFormSelect>

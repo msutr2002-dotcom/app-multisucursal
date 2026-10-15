@@ -19,8 +19,9 @@
  * )
  */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { useLocation } from 'react-router-dom'
 
 import {
   CCloseButton,
@@ -56,6 +57,25 @@ const AppSidebar = () => {
   const sidebarShow = useSelector((state) => state.sidebarShow)
   const permisos = useNavPermissions()
   const { esComida } = useFlagsSucursal()
+  const ubicacion = useLocation()
+
+  // En móvil/tablet el sidebar es off-canvas: al navegar se cierra para no
+  // tapar el contenido. En escritorio (>=992px) no se toca.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 991.98px)').matches) {
+      dispatch({ type: 'set', sidebarShow: false })
+    }
+  }, [ubicacion.pathname, dispatch])
+
+  // Al cruzar el breakpoint: en escritorio se abre, en móvil se cierra
+  // (el sidebar off-canvas no debe quedar tapando el contenido al encoger).
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined
+    const mq = window.matchMedia('(min-width: 992px)')
+    const sync = (e) => dispatch({ type: 'set', sidebarShow: e.matches })
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [dispatch])
 
   // Filtra por permisos. Los títulos de sección (CNavTitle, sin `to`) solo se
   // conservan si al menos un ítem visible los sigue: si no, un usuario sin

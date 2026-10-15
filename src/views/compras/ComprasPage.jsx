@@ -38,6 +38,7 @@ import usePermission from '../../hooks/usePermission'
 import useEstadoRed from '../../hooks/useEstadoRed'
 import ConfirmModal from '../dashboard/components/common/ConfirmModal'
 import ModalComprobanteCompra from './ModalComprobanteCompra'
+import TarjetaRegistro from '../../components/common/TarjetaRegistro'
 import {
   registrarCompraLocal,
   listarComprasLocal,
@@ -722,7 +723,7 @@ const ComprasPage = () => {
         </div>
       ) : (
         <>
-          <div className="table-responsive">
+          <div className="d-none d-md-block table-responsive">
             <CTable align="middle" className="mb-0">
               <CTableHead>
                 <CTableRow>
@@ -777,6 +778,7 @@ const ComprasPage = () => {
                           size="sm"
                           onClick={() => setFilaComp(f)}
                           title="Ver comprobante"
+                          aria-label="Ver comprobante de la compra"
                           className="me-1"
                         >
                           <CIcon icon={cilFile} />
@@ -789,6 +791,7 @@ const ComprasPage = () => {
                             onClick={() => abrirAnular(f)}
                             disabled={anulando}
                             title="Anular compra"
+                            aria-label="Anular compra"
                           >
                             <CIcon icon={cilBan} />
                           </CButton>
@@ -822,6 +825,87 @@ const ComprasPage = () => {
                 )}
               </CTableBody>
             </CTable>
+          </div>
+
+          {/* Móvil (<768px): una tarjeta por compra/entrada, acciones visibles */}
+          <div className="d-md-none lista-tarjetas p-2">
+            {filas.map((f) => {
+              const badgeEstado = (
+                <div className="d-flex gap-1 flex-wrap justify-content-end">
+                  <CBadge color={BADGE_ESTADO[f.estado] || 'secondary'}>{f.estado}</CBadge>
+                  {f.sync_status === 'PENDING' && <CBadge color="warning">sin sincronizar</CBadge>}
+                  {f.sync_status === 'CONFLICT' && <CBadge color="danger">conflicto</CBadge>}
+                </div>
+              )
+              if (esCompras) {
+                return (
+                  <TarjetaRegistro
+                    key={f.id}
+                    titulo={
+                      <span className="d-flex align-items-center gap-2">
+                        <span className="font-monospace">
+                          #{String(f.id).slice(0, 8).toUpperCase()}
+                        </span>
+                        <CBadge color="primary">{f.proveedor || '—'}</CBadge>
+                      </span>
+                    }
+                    subtitulo={fechaHora(f.fecha)}
+                    badge={badgeEstado}
+                    campos={[
+                      { label: 'Usuario', value: f.usuario || '—' },
+                      { label: 'Artículos', value: numItems(f.items) },
+                      {
+                        label: 'Total',
+                        value: <strong className="monto">{formatQ(f.total)}</strong>,
+                      },
+                    ]}
+                    acciones={
+                      <>
+                        <CButton
+                          color="secondary"
+                          variant="outline"
+                          aria-label="Ver comprobante de la compra"
+                          onClick={() => setFilaComp(f)}
+                        >
+                          <CIcon icon={cilFile} className="me-1" />
+                          Ver
+                        </CButton>
+                        {puedeAnular && f.estado === 'completada' && (
+                          <CButton
+                            color="danger"
+                            variant="outline"
+                            aria-label="Anular compra"
+                            disabled={anulando}
+                            onClick={() => abrirAnular(f)}
+                          >
+                            <CIcon icon={cilBan} className="me-1" />
+                            Anular
+                          </CButton>
+                        )}
+                      </>
+                    }
+                  />
+                )
+              }
+              return (
+                <TarjetaRegistro
+                  key={f.id}
+                  titulo={
+                    <span className="font-monospace">
+                      #{String(f.id).slice(0, 8).toUpperCase()}
+                    </span>
+                  }
+                  subtitulo={fechaHora(f.fecha)}
+                  badge={badgeEstado}
+                  campos={[
+                    { label: 'Producto', value: f.producto || '—' },
+                    { label: 'Cantidad', value: f.cantidad > 0 ? `+${f.cantidad}` : f.cantidad },
+                    { label: 'Motivo', value: f.motivo || '—' },
+                    { label: 'Usuario', value: f.usuario || '—' },
+                  ]}
+                />
+              )
+            })}
           </div>
           {totalPaginas > 1 && (
             <div className="d-flex justify-content-center mt-3">

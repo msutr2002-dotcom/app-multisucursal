@@ -41,15 +41,19 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
     console.warn('No se pudieron cachear los métodos de pago:', errMetodos)
   }
 
-  // Tipos de precio: vienen de get_catalogos (RPC separado)
+  // Tipos de precio y colores: vienen de get_catalogos (RPC separado)
   let tiposPrecio = []
+  let colores = []
   try {
     const { data: dataTP } = await supabase.rpc('get_catalogos', { p_id_empresa: idEmpresa })
     if (dataTP?.tipos_precio) {
       tiposPrecio = dataTP.tipos_precio.map((t) => ({ ...t, id_empresa: idEmpresa }))
     }
+    if (dataTP?.colores) {
+      colores = dataTP.colores.map((c) => ({ ...c, id_empresa: idEmpresa }))
+    }
   } catch (e) {
-    console.warn('No se pudieron cachear tipos de precio:', e)
+    console.warn('No se pudieron cachear tipos de precio/colores:', e)
   }
 
   await db.transaction(
@@ -63,6 +67,7 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
     db.unidades,
     db.tipos_precio,
     db.proveedores,
+    db.colores,
     async () => {
       // Guard en tiempo de commit: si hay eventos PENDING (ventas locales aún sin
       // sincronizar), el stock del servidor está desactualizado. Se conserva el
@@ -95,6 +100,7 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
       if (unidades.length) await db.unidades.clear()
       if (tiposPrecio.length) await db.tipos_precio.clear()
       if (proveedores.length) await db.proveedores.clear()
+      if (colores.length) await db.colores.clear()
 
       await db.productos.bulkPut(productos)
       await db.productos_sucursal.bulkPut(stockSucursales)
@@ -103,6 +109,7 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
       if (unidades.length) await db.unidades.bulkPut(unidades)
       if (tiposPrecio.length) await db.tipos_precio.bulkPut(tiposPrecio)
       if (proveedores.length) await db.proveedores.bulkPut(proveedores)
+      if (colores.length) await db.colores.bulkPut(colores)
       if (metodos.length) await db.metodos_pago.bulkPut(metodos)
     },
   )
@@ -116,10 +123,10 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
  * inline dentro de `hidratarCatalogo` porque vienen embebidos en la respuesta
  * de `get_productos_admin`, no en `get_catalogos`.
  * @param {string} idEmpresa
- * @returns {Promise<{tipos_precio: number, metodos: number}>}
+ * @returns {Promise<{tipos_precio: number, metodos: number, colores: number}>}
  */
 export async function sincronizarCatalogosSecundarios(idEmpresa) {
-  if (!idEmpresa) return { tipos_precio: 0, metodos: 0 }
+  if (!idEmpresa) return { tipos_precio: 0, metodos: 0, colores: 0 }
 
   const [resCatalogos, resMetodos] = await Promise.all([
     Promise.resolve(supabase.rpc('get_catalogos', { p_id_empresa: idEmpresa })).catch(() => ({
@@ -132,16 +139,22 @@ export async function sincronizarCatalogosSecundarios(idEmpresa) {
     ...t,
     id_empresa: idEmpresa,
   }))
+  const colores = (resCatalogos?.data?.colores || []).map((c) => ({
+    ...c,
+    id_empresa: idEmpresa,
+  }))
   const metodosArr = resMetodos?.data || []
 
-  await db.transaction('rw', db.tipos_precio, db.metodos_pago, async () => {
+  await db.transaction('rw', db.tipos_precio, db.metodos_pago, db.colores, async () => {
     if (tiposPrecio.length) await db.tipos_precio.clear()
     if (metodosArr.length) await db.metodos_pago.clear()
+    if (colores.length) await db.colores.clear()
     if (tiposPrecio.length) await db.tipos_precio.bulkPut(tiposPrecio)
     if (metodosArr.length) await db.metodos_pago.bulkPut(metodosArr)
+    if (colores.length) await db.colores.bulkPut(colores)
   })
 
-  return { tipos_precio: tiposPrecio.length, metodos: metodosArr.length }
+  return { tipos_precio: tiposPrecio.length, metodos: metodosArr.length, colores: colores.length }
 }
 
 /**
@@ -152,18 +165,26 @@ export async function sincronizarCatalogosSecundarios(idEmpresa) {
  */
 export async function leerCatalogosLocales(idEmpresa) {
   if (!idEmpresa) {
-    return { categorias: [], marcas: [], unidades: [], proveedores: [], tipos_precio: [] }
+    return {
+      categorias: [],
+      marcas: [],
+      unidades: [],
+      proveedores: [],
+      tipos_precio: [],
+      colores: [],
+    }
   }
 
-  const [categorias, marcas, unidades, proveedores, tipos_precio] = await Promise.all([
+  const [categorias, marcas, unidades, proveedores, tipos_precio, colores] = await Promise.all([
     db.categorias.where('id_empresa').equals(idEmpresa).toArray(),
     db.marcas.where('id_empresa').equals(idEmpresa).toArray(),
     db.unidades.where('id_empresa').equals(idEmpresa).toArray(),
     db.proveedores.where('id_empresa').equals(idEmpresa).toArray(),
     db.tipos_precio.where('id_empresa').equals(idEmpresa).toArray(),
+    db.colores.where('id_empresa').equals(idEmpresa).toArray(),
   ])
 
-  return { categorias, marcas, unidades, proveedores, tipos_precio }
+  return { categorias, marcas, unidades, proveedores, tipos_precio, colores }
 }
 
 /**

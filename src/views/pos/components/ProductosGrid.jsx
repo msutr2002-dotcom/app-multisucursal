@@ -63,10 +63,7 @@ const ProductosGrid = ({ productos, stockPorProducto, onAgregar }) => {
       {visibles.length === 0 ? (
         <p className="text-body-secondary mb-0">Sin productos en esta categoría.</p>
       ) : (
-        <div
-          className="d-grid gap-2"
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))' }}
-        >
+        <div className="pos-grid">
           {visibles.map((p) => {
             // D6: stock de la bodega activa; fallback al caché de sucursal.
             const deBodega = stockPorProducto?.get(p.id)
@@ -77,29 +74,29 @@ const ProductosGrid = ({ productos, stockPorProducto, onAgregar }) => {
               <button
                 key={p.id}
                 type="button"
-                className="btn border text-start p-3 d-flex gap-3 align-items-center h-100"
+                className="btn border text-center p-2 d-flex flex-column align-items-center h-100 gap-1"
                 style={{ opacity: sinStock ? 0.45 : 1 }}
                 disabled={sinStock}
                 title={sinStock ? 'Sin stock en esta sucursal' : `Agregar ${p.name}`}
                 onClick={() => onAgregar(p)}
               >
-                <ImagenProducto src={p.imagen} alt={p.name} size={72} radius={10} />
-                <span className="d-flex flex-column overflow-hidden flex-grow-1">
-                  <span
-                    className="fw-semibold text-truncate"
-                    style={{ fontSize: '1rem', lineHeight: 1.2 }}
-                  >
-                    {p.name}
-                  </span>
-                  <span className="text-primary fw-bold" style={{ fontSize: '1.15rem' }}>
-                    {formatQ(precioTile(p))}
-                  </span>
-                  {p.contiene_insumos ? (
-                    <CBadge color="info" className="mt-1 align-self-start">
-                      Combo
-                    </CBadge>
-                  ) : null}
+                <div className="pos-imagen">
+                  <ImagenProducto src={p.imagen} alt={p.name} size={64} radius={10} />
+                </div>
+                <span
+                  className="fw-semibold text-truncate"
+                  style={{ fontSize: '0.8rem', lineHeight: 1.15, maxWidth: '120px' }}
+                >
+                  {p.name}
                 </span>
+                <span className="text-primary fw-bold" style={{ fontSize: '0.875rem' }}>
+                  {formatQ(precioTile(p))}
+                </span>
+                {p.contiene_insumos ? (
+                  <CBadge color="info" className="mt-1">
+                    Combo
+                  </CBadge>
+                ) : null}
               </button>
             )
           })}

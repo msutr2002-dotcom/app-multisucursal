@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react'
-import { CCard, CCardBody, CButton, CFormInput, CCollapse, CBadge } from '@coreui/react'
+import { CCard, CCardBody, CButton, CCollapse, CBadge, CFormSelect } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilTags, cilBarcode, cilChevronBottom, cilChevronTop } from '@coreui/icons'
 import { formatQ } from '../../../utils/format'
 import { calcularTier, precioAuto, factorDe, esPresentacion, maxCantidad } from '../precioUtils'
 import PrecioSelector from './PrecioSelector'
 import ImagenProducto from '../../../components/common/ImagenProducto'
+import CampoNumero from '../../../components/common/CampoNumero'
 
 /**
  * RF-V2 (v4): layout estilo sistema viejo con cabecera resaltada —
@@ -16,7 +17,7 @@ import ImagenProducto from '../../../components/common/ImagenProducto'
  * (imagen + descripción en panel blanco), plegado por defecto. El remount por
  * `key={selected.id}` en POSPage lo reinicia al cambiar de producto.
  */
-const ProductoDetalle = ({ producto, stockBodega, onAgregar }) => {
+const ProductoDetalle = ({ producto, stockBodega, onAgregar, colores = [], onCambiarColor }) => {
   const [cantidad, setCantidad] = useState(1)
   const [override, setOverride] = useState(null) // null = Auto
   const [abierto, setAbierto] = useState(false)
@@ -46,7 +47,6 @@ const ProductoDetalle = ({ producto, stockBodega, onAgregar }) => {
     // La selección manual del dropdown se mantiene al cambiar la cantidad
     // (igual que el sistema viejo).
   }
-
   // Al cambiar de tier se conserva el número y se recorta al nuevo máximo (D4)
   const cambiarTier = (id) => {
     setOverride(id)
@@ -98,6 +98,28 @@ const ProductoDetalle = ({ producto, stockBodega, onAgregar }) => {
         <div className="row g-3">
           {/* ===== Izquierda: Precio + Cantidad + total + Agregar ===== */}
           <div className="col-12 col-md-7">
+            {colores.length > 1 && (
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <span className="small text-body-secondary">Color:</span>
+                <CFormSelect
+                  size="sm"
+                  aria-label="Color"
+                  className="w-auto"
+                  style={{ maxWidth: '260px' }}
+                  value={colores.find((c) => c.activo)?.id ?? ''}
+                  onChange={(e) => {
+                    const c = colores.find((x) => x.id === e.target.value)
+                    if (c && !c.activo) onCambiarColor?.(c.producto)
+                  }}
+                >
+                  {colores.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.stock === 0 ? `${c.nombre} (sin stock)` : c.nombre}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </div>
+            )}
             <PrecioSelector
               precios={precios}
               value={override}
@@ -107,13 +129,12 @@ const ProductoDetalle = ({ producto, stockBodega, onAgregar }) => {
 
             <div className="d-flex align-items-center gap-2 flex-wrap mt-2">
               <span className="small text-body-secondary">Cantidad:</span>
-              <CFormInput
-                type="number"
+              <CampoNumero
                 size="sm"
                 value={cantidad}
                 min={1}
                 max={Math.max(maxDisp, 1)}
-                onChange={(e) => cambiarCantidad(parseInt(e.target.value, 10))}
+                onCommit={cambiarCantidad}
                 style={{ width: '72px' }}
                 aria-label="Cantidad"
               />

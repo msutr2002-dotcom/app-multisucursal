@@ -1,0 +1,52 @@
+# tasks: móvil (adaptación de la interfaz de operación a pantallas pequeñas)
+
+Spec: `specs/movil.md`. Una tarea a la vez; `[x]` tras aprobación del usuario.
+Orden por impacto: Historial → POS → Reportes → Compras → Inventario → Productos → Clientes (y base + shell primero).
+
+- [x] Task 1: Spec + tasks.
+  - [x] `specs/movil.md` + `tasks/movil-tasks.md`.
+- [x] Task 2: Base móvil + shell.
+  - [x] `src/components/common/TarjetaRegistro.jsx` (tarjeta de fila reutilizable, CoreUI-only).
+  - [x] SCSS: tarjeta de registro + utilidades móvil (`src/scss/style.scss`).
+  - [x] Sidebar no arranca abierto en `<992px`; se cierra al navegar en móvil y al cruzar el breakpoint.
+  - [x] POS: quitar `CContainer fluid` anidado (`POSPage.jsx:1004`); `CobrarBar` coherente en 768–991px.
+  - Verificado: eslint (solo preexistente) + build ✓ + probe `probe-movil-shell.js` 8/8.
+- [x] Task 3: Historial — listado a tarjetas en móvil (acciones Ver/Anular visibles).
+  - Tabla en `d-none d-md-block`; tarjetas `d-md-none` con `TarjetaRegistro` (folio+tipo, fecha, estado+sync, Usuario/Método/Ítems/Total, Ver/Anular).
+  - Verificado: eslint + build ✓ + probe `probe-historial-movil.js` 8/8.
+- [x] Task 4: POS — carrito a tarjetas, `TipoPagoToggle` con wrap, grilla comida 2 col, modales bottom-sheet.
+  - `Carrito.jsx`: tabla en `d-none d-md-block`; tarjetas `d-md-none` con `CarritoFilaTarjeta` (producto, cantidad ±, precio, total, Quitar).
+  - `CarritoFilaTarjeta.jsx` (nuevo): reutiliza `TarjetaRegistro`.
+  - `TipoPagoToggle.jsx`: `flex-wrap` + `minWidth:120px` por botón.
+  - `ProductosGrid.jsx`: clase `.pos-grid` (2 columnas en móvil).
+  - `ModalPendientes`/`ModalCotizaciones`/`ConflictResolverModal`: clase `modal-sheet` → bottom sheet en móvil.
+  - SCSS: `.pos-grid`, `.modal-sheet` (anclado abajo, esquinas arriba redondeadas), controles táctiles ≥44px en tarjetas.
+  - Verificado: eslint (solo CRLF preexistente) + build ✓ + probe (buscador, detalle, color, tabla oculta, sin scroll horizontal). Nota: no se pudo agregar ítem al carrito porque las variantes de prueba tienen stock 0 en la bodega activa (limitación de datos).
+- [x] Task 5: Reportes — líneas en `table-responsive` + cabecera de venta compacta.
+  - `FilaVenta`: tabla de líneas envuelta en `table-responsive`; cabecera con clase `reportes-cabecera-venta` (gap/padding reducidos en <576px).
+  - SCSS: `.reportes-cabecera-venta` compacta en móvil.
+  - Verificado: eslint (solo CRLF preexistente) + build ✓ + probe (sin scroll horizontal). Nota: no hay ventas en reportes para `system`, por lo que el detalle/líneas no se pudieron renderizar con datos reales.
+- [x] Task 6: Compras — listado a tarjetas + `aria-label` en botones solo-icono.
+  - Tabla en `d-none d-md-block`; tarjetas `d-md-none` con `TarjetaRegistro` (compra: folio+proveedor, fecha, estado+sync, Usuario/Artículos/Total, Ver/Anular; entrada: folio, fecha, estado, Producto/Cantidad/Motivo/Usuario).
+  - `aria-label` en botones solo-icono (Ver comprobante, Anular) de la tabla desktop.
+  - Verificado: eslint (solo CRLF preexistente) + build ✓ + probe `probe-task6-compras.js` 4/4.
+- [x] Task 7: Inventario — listado a tarjetas.
+  - Tabla en `d-none d-md-block`; tarjetas `d-md-none` con `TarjetaRegistro` (producto, SKU·categoría, badge stock+stock bajo, campos Stock/Stock mín./Precio).
+  - Verificado: eslint (solo CRLF preexistente) + build ✓ + probe `probe-task7-inventario.js` 3/3.
+- [x] Task 8: Productos (admin) — `ProductosTabla.jsx` a tarjetas en móvil (evita el scroll horizontal para llegar a ACCIONES; acciones Editar/Eliminar, stock ±, precio visibles por tarjeta; `aria-label` en botones solo-icono).
+  - `Productos.jsx`: tabla en `d-none d-md-block`; tarjetas `d-md-none` con `ProductosTarjeta`; `onStock` conectado para abrir el modal de stock.
+  - `ProductosTarjeta.jsx` (nuevo): tarjeta por producto con SKU, precio/costo/margen, stock (valor clickeable que abre `ModalStock.jsx`: Sucursal/Stock/Mínimo + Guardar/Cancelar), Precios/Editar/Eliminar. `aria-label` en botones solo-icono.
+  - `ProductosTabla.jsx`: se quitó el `table-responsive` interno (ahora lo envuelve Productos.jsx); `aria-label` en botones solo-icono (stock ±, eliminar).
+  - Verificado: eslint limpio + build ✓ + probe `probe-task8-productos.js` 7/7 + probe `probe-task8b-stock.js` 5/5 (clic en stock abre el modal "Stock — …" con Guardar Stock).
+- [x] Task 8b: Clientes (admin) — `ClientesPage.jsx` a tarjetas en móvil (evita el scroll horizontal de la tabla de 9 columnas; acciones Ver/Editar/Activar-Desactivar visibles; `aria-label` en botones solo-icono de la tabla desktop).
+  - `ClientesPage.jsx`: tabla en `d-none d-md-block`; tarjetas `d-md-none` con `ClientesTarjeta`.
+  - `ClientesTarjeta.jsx` (nuevo): tarjeta por cliente con NIT, teléfono, mayoreo, compras, total gastado, última compra, estado; acciones Ver / Editar / Activar-Desactivar.
+  - `ClientesPage.jsx` (tabla desktop): `aria-label` en botones solo-icono (Ver, Editar, Activar/Desactivar).
+  - Verificado: eslint limpio + build ✓ + probe `probe-task8c-clientes.js` 8/8 (a 390px tarjetas con Ver/Editar/Desactivar, tabla oculta, sin scroll; a 1024px tabla visible y tarjetas ocultas).
+- [x] Task 9: Verificación global (probe 390px, capturas, `impeccable detect`, lint, build) + `memory.md`/`AGENTS.md`.
+  - Probe 7 rutas a 390×844 sin scroll horizontal: `probe-task9-global.js`.
+  - Capturas: `docs/capturas/movil-{historial,pos,reportes,compras,inventario,productos,clientes}.png`.
+  - `impeccable detect --json` → `[]` (sin hallazgos).
+  - eslint tocados: 0 nuevos (solo preexistente `POSPage.jsx:425` + CRLF preexistente del repo).
+  - `npm run build` ✓.
+  - `memory.md` + `AGENTS.md` actualizados (regla de diseño móvil, roadmap sin backlog).

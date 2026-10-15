@@ -277,7 +277,13 @@ const ModalComprobante = ({ visible, idVenta, onClose, forzarLocal = false }) =>
               <tbody>
                 {(detalle.items || []).map((it, i) => (
                   <tr key={i}>
-                    <td>{it.producto}</td>
+                    <td>
+                      {it.producto}
+                      {it.color &&
+                        !String(it.producto).toLowerCase().includes(it.color.toLowerCase()) && (
+                          <span className="text-body-secondary"> · {it.color}</span>
+                        )}
+                    </td>
                     <td className="text-center">{it.cantidad}</td>
                     <td className="text-end monto">{formatQ(it.unitario)}</td>
                     <td className="text-end monto">{formatQ(it.subtotal)}</td>

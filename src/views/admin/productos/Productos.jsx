@@ -20,8 +20,10 @@ import ModalPrecios from './ModalPrecios'
 import ModalStock from './ModalStock'
 import ConfirmModal from '../../dashboard/components/common/ConfirmModal'
 import { useToast } from '../../../components/common/ToastContext'
+import TarjetaRegistro from '../../../components/common/TarjetaRegistro'
 import usePermission from '../../../hooks/usePermission'
 import useEstadoRed from '../../../hooks/useEstadoRed'
+import ProductosTarjeta from './ProductosTarjeta'
 import {
   leerProductosAdminLocal,
   leerIngredientesLocal,
@@ -51,6 +53,7 @@ const Productos = () => {
     proveedores: [],
     tipos_precio: [],
     unidades: [],
+    colores: [],
   })
   const [busqueda, setBusqueda] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('')
@@ -85,6 +88,7 @@ const Productos = () => {
           proveedores: local.proveedores || [],
           tipos_precio: local.tipos_precio || [],
           unidades: local.unidades || [],
+          colores: local.colores || [],
         })
         setProductoSel((prev) =>
           prev ? (local.productos || []).find((x) => x.id === prev.id) || null : null,
@@ -130,6 +134,7 @@ const Productos = () => {
       proveedores: data.proveedores || [],
       tipos_precio: resCatalogos.data?.tipos_precio || [],
       unidades: data.unidades || [],
+      colores: data.colores || resCatalogos.data?.colores || [],
     })
     // mantiene fresco el producto seleccionado tras recargar
     setProductoSel((prev) => (prev ? lista.find((x) => x.id === prev.id) || null : null))
@@ -164,6 +169,7 @@ const Productos = () => {
       p_id_categoria: datos.id_categoria || null,
       p_id_marca: datos.id_marca || null,
       p_id_proveedor: datos.id_proveedor || null,
+      p_id_color: datos.id_color || null,
       p_precio_compra: toCents(datos.precio_compra) ?? 0,
       p_tipo: datos.tipo,
       p_estado: datos.estado,
@@ -344,26 +350,55 @@ const Productos = () => {
         {filtrados.length === 0 ? (
           <p className="text-body-secondary text-center py-4 mb-0">No hay productos</p>
         ) : (
-          <ProductosTabla
-            productos={filtrados}
-            idSucursalActual={idSucursalActual}
-            puedeEditar={puedeEditar}
-            puedeEliminar={puedeEliminar}
-            onEditar={(p) => {
-              setProductoSel(p)
-              setModalProducto(true)
-            }}
-            onPrecios={(p) => {
-              setProductoSel(p)
-              setModalPrecios(true)
-            }}
-            onStock={(p) => {
-              setProductoSel(p)
-              setModalStock(true)
-            }}
-            onEliminar={(p) => setAEliminar(p)}
-            onStockDelta={handleStockDelta}
-          />
+          <>
+            {/* Escritorio: tabla (Desktop intacto) */}
+            <div className="d-none d-md-block table-responsive">
+              <ProductosTabla
+                productos={filtrados}
+                idSucursalActual={idSucursalActual}
+                puedeEditar={puedeEditar}
+                puedeEliminar={puedeEliminar}
+                onEditar={(p) => {
+                  setProductoSel(p)
+                  setModalProducto(true)
+                }}
+                onPrecios={(p) => {
+                  setProductoSel(p)
+                  setModalPrecios(true)
+                }}
+                onStock={(p) => {
+                  setProductoSel(p)
+                  setModalStock(true)
+                }}
+                onEliminar={(p) => setAEliminar(p)}
+                onStockDelta={handleStockDelta}
+              />
+            </div>
+
+            {/* Móvil (<768px): tarjetas con acciones visibles */}
+            <div className="d-md-none lista-tarjetas p-2">
+              <ProductosTarjeta
+                productos={filtrados}
+                idSucursalActual={idSucursalActual}
+                puedeEditar={puedeEditar}
+                puedeEliminar={puedeEliminar}
+                onEditar={(p) => {
+                  setProductoSel(p)
+                  setModalProducto(true)
+                }}
+                onPrecios={(p) => {
+                  setProductoSel(p)
+                  setModalPrecios(true)
+                }}
+                onStock={(p) => {
+                  setProductoSel(p)
+                  setModalStock(true)
+                }}
+                onEliminar={(p) => setAEliminar(p)}
+                onStockDelta={handleStockDelta}
+              />
+            </div>
+          </>
         )}
       </CCardBody>
 

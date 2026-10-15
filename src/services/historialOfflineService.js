@@ -189,6 +189,10 @@ export async function leerDetallesVentaLocal(idsVentas) {
   const productos = await db.productos.bulkGet(idProductos)
   const prodMap = new Map(productos.filter(Boolean).map((p) => [p.id, p]))
 
+  // papel-iris: nombre del color por línea (para el comprobante offline).
+  const colores = db.colores ? await db.colores.toArray() : []
+  const colorMap = new Map(colores.map((c) => [c.id, c.name]))
+
   const idClientes = [
     ...new Set(
       ventas
@@ -207,6 +211,7 @@ export async function leerDetallesVentaLocal(idsVentas) {
     if (!grupo) continue
     const p = prodMap.get(d.id_producto) || {}
     const tier = (p.precios || []).find((x) => x.id === d.id_precio_producto)
+    const idColor = d.id_color || p.id_color || null
     grupo.items.push({
       producto: p.name || d.id_producto,
       sku: p.sku || '',
@@ -214,6 +219,8 @@ export async function leerDetallesVentaLocal(idsVentas) {
       unitario: Math.round(d.subtotal / d.cantidad),
       subtotal: d.subtotal,
       tipo: tier?.tipo || null,
+      id_color: idColor,
+      color: idColor ? colorMap.get(idColor) || null : null,
     })
   }
 

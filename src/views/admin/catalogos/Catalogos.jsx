@@ -25,7 +25,16 @@ const TABS = [
   { key: 'categorias', label: 'Categorías' },
   { key: 'proveedores', label: 'Proveedores' },
   { key: 'unidades', label: 'Unidades de Medida' },
-  { key: 'tipos_precio', label: 'Tipos de Precio' },
+  {
+    key: 'tipos_precio',
+    label: 'Tipos de Precio',
+    nota: 'Los tipos de precio son comunes para todas las empresas.',
+  },
+  {
+    key: 'colores',
+    label: 'Colores',
+    nota: 'Los colores son comunes para todas las empresas.',
+  },
 ]
 
 const MAPA_TABLA = {
@@ -34,6 +43,7 @@ const MAPA_TABLA = {
   proveedores: 'proveedor',
   unidades: 'unidades',
   tipos_precio: 'tipo_producto',
+  colores: 'color',
 }
 
 const NOMBRES = {
@@ -42,18 +52,36 @@ const NOMBRES = {
   proveedores: 'Proveedor',
   unidades: 'Unidad',
   tipos_precio: 'Tipo de Precio',
+  colores: 'Color',
 }
 
 const Catalogos = () => {
   const empresaId = localStorage.getItem('empresaSeleccionada')
-  const puedeCrear = usePermission('catalogos', 'crear')
-  const puedeEditar = usePermission('catalogos', 'editar')
-  const puedeEliminar = usePermission('catalogos', 'eliminar')
   const showToast = useToast()
   const enLinea = useEstadoRed()
   const [sinConexion, setSinConexion] = useState(false)
 
+  // Permisos individuales por catálogo (ver/crear/editar/eliminar por pestaña).
+  const perms = {}
+  TABS.forEach((t) => {
+    perms[t.key] = {
+      ver: usePermission(t.key, 'ver'),
+      crear: usePermission(t.key, 'crear'),
+      editar: usePermission(t.key, 'editar'),
+      eliminar: usePermission(t.key, 'eliminar'),
+    }
+  })
+
+  // Pestañas a las que el rol tiene permiso de ver.
+  const tabsConPermiso = TABS.filter((t) => perms[t.key]?.ver)
+
+  // Si el tab activo no tiene permiso de ver, cambiar al primero disponible.
   const [tab, setTab] = useState('marcas')
+  useEffect(() => {
+    if (tabsConPermiso.length > 0 && !tabsConPermiso.some((t) => t.key === tab)) {
+      setTab(tabsConPermiso[0].key)
+    }
+  }, [tabsConPermiso, tab])
   const [datos, setDatos] = useState({})
   const [modal, setModal] = useState({ abierto: false, item: null })
   const [aEliminar, setAEliminar] = useState(null)
@@ -126,7 +154,7 @@ const Catalogos = () => {
       <CCardHeader>
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
           <h5 className="mb-0">Catálogos</h5>
-          {puedeCrear && enLinea && (
+          {perms[tab]?.crear && enLinea && (
             <CButton
               color="primary"
               className="text-nowrap"
@@ -138,7 +166,7 @@ const Catalogos = () => {
           )}
         </div>
         <CNav variant="tabs">
-          {TABS.map((t) => (
+          {tabsConPermiso.map((t) => (
             <CNavItem key={t.key}>
               <CNavLink
                 active={tab === t.key}
@@ -160,11 +188,7 @@ const Catalogos = () => {
       )}
 
       <CCardBody>
-        {config?.global && (
-          <p className="small text-body-secondary mt-0 mb-3">
-            Los tipos de precio son comunes para todas las empresas.
-          </p>
-        )}
+        {config?.nota && <p className="small text-body-secondary mt-0 mb-3">{config.nota}</p>}
 
         {lista.length === 0 ? (
           <p className="text-body-secondary text-center py-4 mb-0">
@@ -201,7 +225,7 @@ const Catalogos = () => {
               </div>
 
               <div className="d-flex gap-1">
-                {puedeEditar && enLinea && (
+                {perms[tab]?.editar && enLinea && (
                   <CButton
                     size="sm"
                     color="primary"
@@ -212,7 +236,7 @@ const Catalogos = () => {
                     <CIcon icon={cilPen} />
                   </CButton>
                 )}
-                {puedeEliminar && enLinea && (
+                {perms[tab]?.eliminar && enLinea && (
                   <CButton
                     size="sm"
                     color="danger"

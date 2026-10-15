@@ -36,6 +36,7 @@ import useEstadoRed from '../../../hooks/useEstadoRed'
 import { formatQ } from '../../../utils/format'
 import { db } from '../../../lib/db'
 import { hidratarClientes, leerClientesLocal } from '../../../services/catalogSyncService'
+import ClientesTarjeta from './ClientesTarjeta'
 
 const POR_PAGINA = 25
 
@@ -350,7 +351,7 @@ const ClientesPage = () => {
           </p>
         ) : (
           <>
-            <div className="table-responsive">
+            <div className="d-none d-md-block table-responsive">
               <CTable align="middle" className="mb-0">
                 <CTableHead>
                   <CTableRow>
@@ -417,6 +418,8 @@ const ClientesPage = () => {
                             color="light"
                             className="border"
                             onClick={() => verDetalle(c)}
+                            title="Ver detalle"
+                            aria-label={`Ver detalle de ${c.name}`}
                           >
                             <CIcon icon={cilList} className="me-1" style={{ color: '#0d7a5f' }} />
                             Ver
@@ -428,6 +431,8 @@ const ClientesPage = () => {
                                 color="light"
                                 className="border"
                                 onClick={() => abrirEditar(c)}
+                                title="Editar cliente"
+                                aria-label={`Editar ${c.name}`}
                               >
                                 <CIcon
                                   icon={cilPen}
@@ -441,6 +446,12 @@ const ClientesPage = () => {
                                 color="light"
                                 className="border"
                                 onClick={() => alternarActivo(c)}
+                                title={
+                                  c.activo === false ? 'Activar cliente' : 'Desactivar cliente'
+                                }
+                                aria-label={
+                                  c.activo === false ? `Activar ${c.name}` : `Desactivar ${c.name}`
+                                }
                               >
                                 <CIcon
                                   icon={cilBan}
@@ -457,6 +468,17 @@ const ClientesPage = () => {
                   ))}
                 </CTableBody>
               </CTable>
+            </div>
+
+            {/* Móvil (<768px): tarjetas con acciones visibles */}
+            <div className="d-md-none lista-tarjetas p-2">
+              <ClientesTarjeta
+                clientes={filas}
+                puedeEditar={puedeEditar}
+                onVerDetalle={verDetalle}
+                onEditar={abrirEditar}
+                onAlternarActivo={alternarActivo}
+              />
             </div>
             {paginas > 1 && (
               <CPagination align="center" className="mt-3">

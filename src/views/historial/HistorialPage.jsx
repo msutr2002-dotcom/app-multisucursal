@@ -38,6 +38,7 @@ import { formatQ } from '../../utils/format'
 import { useToast } from '../../components/common/ToastContext'
 import usePermission from '../../hooks/usePermission'
 import useEstadoRed from '../../hooks/useEstadoRed'
+import TarjetaRegistro from '../../components/common/TarjetaRegistro'
 import ConfirmModal from '../dashboard/components/common/ConfirmModal'
 import ModalComprobante from '../../components/common/ModalComprobante'
 import ModalImpresionCotizacion from '../pos/components/ModalImpresionCotizacion'
@@ -516,7 +517,7 @@ const HistorialPage = () => {
           </div>
         ) : (
           <>
-            <div className="table-responsive">
+            <div className="d-none d-md-block table-responsive">
               <CTable align="middle" className="mb-0">
                 <CTableHead>
                   <CTableRow>
@@ -608,6 +609,84 @@ const HistorialPage = () => {
                   ))}
                 </CTableBody>
               </CTable>
+            </div>
+
+            {/* Móvil (<768px): una tarjeta por registro, acciones siempre visibles */}
+            <div className="d-md-none lista-tarjetas">
+              {ventas.map((v) => (
+                <TarjetaRegistro
+                  key={`${v.tipo || 'venta'}-${v.id}`}
+                  titulo={
+                    <span className="d-flex align-items-center gap-2">
+                      <span className="font-monospace">#{v.id.slice(0, 8).toUpperCase()}</span>
+                      <CBadge color={BADGE_TIPO[v.tipo] || 'secondary'}>
+                        {ETIQUETA_TIPO[v.tipo] || 'Venta'}
+                      </CBadge>
+                    </span>
+                  }
+                  subtitulo={fechaHora(v.fecha)}
+                  badge={
+                    <div className="d-flex gap-1 flex-wrap justify-content-end">
+                      <CBadge color={BADGE_ESTADO[v.estado] || 'secondary'}>
+                        {etiquetaEstado(v.estado)}
+                      </CBadge>
+                      {v.pendienteSync && (
+                        <CBadge color="warning" title="Aún no está en el servidor">
+                          sin sincronizar
+                        </CBadge>
+                      )}
+                    </div>
+                  }
+                  campos={[
+                    { label: 'Usuario', value: v.usuario },
+                    {
+                      label: 'Método',
+                      value: v.id_metodo_pago ? metodos[v.id_metodo_pago] || '—' : '—',
+                    },
+                    { label: 'Ítems', value: `${v.items} ítem${v.items === 1 ? '' : 's'}` },
+                    {
+                      label: 'Total',
+                      value: <strong className="monto">{formatQ(v.total)}</strong>,
+                    },
+                  ]}
+                  acciones={
+                    <>
+                      <CButton
+                        color="info"
+                        variant="outline"
+                        title="Ver detalle"
+                        aria-label="Ver detalle de la venta"
+                        onClick={() => abrirDetalle(v)}
+                      >
+                        <CIcon icon={cilInfo} className="me-1" />
+                        Ver
+                      </CButton>
+                      {puedeEliminar &&
+                        v.tipo !== 'cotizacion' &&
+                        v.estado === 'completada' &&
+                        enLinea && (
+                          <CButton
+                            color="danger"
+                            variant="outline"
+                            title={
+                              v.esLocal
+                                ? 'La venta aún no está en el servidor: se anulará al sincronizar'
+                                : 'Anular venta'
+                            }
+                            aria-label="Anular venta"
+                            onClick={() => {
+                              setMotivo('')
+                              setAAnular(v)
+                            }}
+                          >
+                            <CIcon icon={cilTrash} className="me-1" />
+                            Anular
+                          </CButton>
+                        )}
+                    </>
+                  }
+                />
+              ))}
             </div>
             {ventas.length < total && (
               <div className="text-center mt-3">

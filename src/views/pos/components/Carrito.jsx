@@ -4,6 +4,7 @@ import CIcon from '@coreui/icons-react'
 import { cilBasket, cilBookmark, cilList, cilTrash } from '@coreui/icons'
 import { formatQ } from '../../../utils/format'
 import CarritoFila from './CarritoFila'
+import CarritoFilaTarjeta from './CarritoFilaTarjeta'
 
 const Carrito = ({
   items,
@@ -56,7 +57,7 @@ const Carrito = ({
         </div>
       </CCardHeader>
 
-      <div className="table-responsive">
+      <div className="d-none d-md-block table-responsive">
         <table className="table align-middle mb-0">
           <thead>
             <tr className="small text-body-secondary">
@@ -87,6 +88,20 @@ const Carrito = ({
           </tbody>
         </table>
       </div>
+
+      {/* Móvil (<768px): una tarjeta por línea, con cantidad y "Quitar" visibles */}
+      {!vacio && (
+        <div className="d-md-none lista-tarjetas p-2">
+          {items.map((item) => (
+            <CarritoFilaTarjeta
+              key={`${item.idProducto}__${item.id_unidad_venta || ''}`}
+              item={item}
+              onCantidad={onCantidad}
+              onRemove={onRemove}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="p-3 border-top d-flex justify-content-between align-items-center">
         <span className="fs-5 fw-bold">Total</span>

@@ -19,6 +19,7 @@ const NOMBRES = {
   proveedores: 'Proveedor',
   unidades: 'Unidad',
   tipos_precio: 'Tipo de Precio',
+  colores: 'Color',
 }
 
 const vacio = {

@@ -275,16 +275,162 @@ h6,
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(3.5rem + env(safe-area-inset-bottom, 0)); /* encima del bottom nav */
+  bottom: 0; /* sin bottom nav (tablet 768–991px) */
   padding: 0.5rem 0.75rem;
   background-color: var(--cui-body-bg);
   z-index: 1029;
 }
 
-/* ===== Bottom sheet de cobro ===== */
-.modal-cobrar .modal-content {
+/* <768px: existe bottom nav → la barra va por encima */
+@media (max-width: 767.98px) {
+  .cobrar-bar {
+    bottom: calc(3.5rem + env(safe-area-inset-bottom, 0));
+  }
+}
+
+/* ===== Bottom sheet (móvil): esquinas superiores redondeadas ===== */
+.modal-cobrar .modal-content,
+.modal-sheet .modal-content {
   border-top-left-radius: 1rem;
   border-top-right-radius: 1rem;
+}
+
+/* En móvil, los modales de flujo se anclan abajo (bottom sheet) a pantalla ancha */
+@media (max-width: 767.98px) {
+  .modal-sheet .modal-dialog {
+    margin: 0;
+    max-width: 100%;
+    min-height: 100%;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .modal-sheet .modal-content {
+    width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    max-height: 92vh;
+  }
+}
+
+/* ===== Grid de productos del POS (vista comida) ===== */
+.pos-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.pos-imagen {
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* En móvil: 2 columnas y tiles estilo Campero (imagen arriba, nombre abajo) */
+@media (max-width: 575.98px) {
+  .pos-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .pos-grid .btn {
+    background: #fff !important;
+    border-radius: 0.875rem !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    padding: 0.5rem 0.35rem !important;
+    gap: 0.4rem !important;
+    text-align: center !important;
+    border: 1px solid #e9ecef !important;
+    min-height: 130px !important;
+  }
+
+  .pos-grid .btn:disabled {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+  }
+
+  .pos-imagen {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+  }
+
+  .pos-grid .btn .fw-semibold {
+    font-size: 0.78rem !important;
+    max-width: 105px !important;
+  }
+
+  .pos-grid .btn .text-primary {
+    font-size: 0.85rem !important;
+  }
+}
+
+/* ===== Reportes: cabecera de venta compacta en móvil ===== */
+@media (max-width: 575.98px) {
+  .reportes-cabecera-venta {
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.85rem;
+  }
+}
+
+/* ===== Listas en móvil: tabla → tarjetas (specs/movil.md) ===== */
+.lista-tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tarjeta-registro {
+  border: 1px solid var(--cui-border-color);
+  border-radius: 0.75rem;
+  background-color: var(--cui-body-bg);
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tarjeta-registro-click {
+  cursor: pointer;
+}
+
+.tarjeta-registro-click:active {
+  background-color: var(--cui-tertiary-bg);
+}
+
+.tarjeta-registro-campos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.tarjeta-registro-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--cui-border-color);
+}
+
+/* En móvil las acciones son controles táctiles: alto ≥44px. */
+.tarjeta-registro-acciones .btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Controles dentro de la tarjeta (steppers de cantidad): área táctil ≥44px. */
+.tarjeta-registro .btn,
+.tarjeta-registro .form-control,
+.tarjeta-registro .form-select {
+  min-height: 44px;
 }
 
 /* ===== LOGIN: panel de cuaderno con la Q del quetzal ===== */
@@ -569,4 +715,47 @@ h6,
     width: 100% !important;
     padding: 0 !important;
   }
+}
+
+/* ===== Contraste de texto en modo oscuro (POS) ===== */
+/* Textos secundarios en fondos oscuros: blanco semitransparente para legibilidad */
+[data-bs-theme="dark"] .text-body-secondary,
+.dark .text-body-secondary,
+body.dark-mode .text-body-secondary {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+[data-bs-theme="dark"] .text-muted,
+.dark .text-muted,
+body.dark-mode .text-muted {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Textos en fondos blancos (cards, modales): asegurar color oscuro para contraste */
+.pos-card-text,
+.card-text,
+.pos-product-name,
+.pos-text-dark {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Precios y montos: mantener color primario para destacar */
+.pos-product-price,
+.monto {
+  color: var(--pos-primary) !important;
+}
+
+/* Labels y leyendas pequeñas en modo oscuro */
+[data-bs-theme="dark"] .small.text-body-secondary,
+.dark .small.text-body-secondary,
+body.dark-mode .small.text-body-secondary {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Botones de acción secundaria en modo oscuro: borde y texto más visibles */
+[data-bs-theme="dark"] .btn-outline-secondary,
+.dark .btn-outline-secondary,
+body.dark-mode .btn-outline-secondary {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
 }

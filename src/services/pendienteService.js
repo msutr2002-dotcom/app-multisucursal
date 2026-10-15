@@ -35,49 +35,58 @@ export async function crearPendienteLocal({ idSucursal, idUsuario, items, total 
   const id = nuevoUuid()
   let idEvento
 
-  await db.transaction('rw', db.ventas, db.detalle_venta, db.cola_sincronizacion, async () => {
-    await db.ventas.add({
-      id,
-      id_sucursal: idSucursal,
-      id_usuario: idUsuario ?? null,
-      id_metodo_pago: null,
-      id_cliente: null,
-      fecha: new Date().toISOString(),
-      total,
-      cambio: 0,
-      estado: 'pendiente',
-    })
+  await db.transaction(
+    'rw',
+    db.ventas,
+    db.detalle_venta,
+    db.cola_sincronizacion,
+    db.productos,
+    async () => {
+      await db.ventas.add({
+        id,
+        id_sucursal: idSucursal,
+        id_usuario: idUsuario ?? null,
+        id_metodo_pago: null,
+        id_cliente: null,
+        fecha: new Date().toISOString(),
+        total,
+        cambio: 0,
+        estado: 'pendiente',
+      })
 
-    await db.detalle_venta.bulkAdd(
-      items.map((it) => ({
-        id: nuevoUuid(),
-        id_venta: id,
-        id_producto: it.id_producto,
-        cantidad: it.cantidad,
-        subtotal: it.subtotal,
-        id_precio_producto: it.id_precio_producto,
-      })),
-    )
+      const prods = await db.productos.bulkGet(items.map((it) => it.id_producto))
+      await db.detalle_venta.bulkAdd(
+        items.map((it, i) => ({
+          id: nuevoUuid(),
+          id_venta: id,
+          id_producto: it.id_producto,
+          cantidad: it.cantidad,
+          subtotal: it.subtotal,
+          id_precio_producto: it.id_precio_producto,
+          id_color: prods[i]?.id_color ?? null,
+        })),
+      )
 
-    idEvento = await encolarOperacion({
-      tabla: 'ventas',
-      operacion: 'INSERT',
-      id,
-      idSucursal,
-      datos: {
-        rpc: 'registrar_pendiente',
-        params: {
-          p_id_sucursal: idSucursal,
-          p_id_usuario: idUsuario ?? null,
-          p_items: items.map((it) => ({
-            id_producto: it.id_producto,
-            cantidad: it.cantidad,
-            id_precio_producto: it.id_precio_producto,
-          })),
+      idEvento = await encolarOperacion({
+        tabla: 'ventas',
+        operacion: 'INSERT',
+        id,
+        idSucursal,
+        datos: {
+          rpc: 'registrar_pendiente',
+          params: {
+            p_id_sucursal: idSucursal,
+            p_id_usuario: idUsuario ?? null,
+            p_items: items.map((it) => ({
+              id_producto: it.id_producto,
+              cantidad: it.cantidad,
+              id_precio_producto: it.id_precio_producto,
+            })),
+          },
         },
-      },
-    })
-  })
+      })
+    },
+  )
 
   return { id, total, idEvento }
 }

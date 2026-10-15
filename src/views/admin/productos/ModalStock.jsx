@@ -6,11 +6,11 @@ import {
   CModalBody,
   CModalFooter,
   CButton,
-  CFormInput,
   CSpinner,
 } from '@coreui/react'
 import { supabase } from '../../../lib/supabase'
 import { useToast } from '../../../components/common/ToastContext'
+import CampoNumero from '../../../components/common/CampoNumero'
 
 const ModalStock = ({ visible, onClose, producto, onCambio, idSucursalActual }) => {
   const showToast = useToast()
@@ -45,9 +45,7 @@ const ModalStock = ({ visible, onClose, producto, onCambio, idSucursalActual }) 
 
   const handleChange = (idx, campo, valor) => {
     setFilas((prev) =>
-      prev.map((fila, i) =>
-        i === idx ? { ...fila, [campo]: Math.max(0, parseInt(valor, 10) || 0) } : fila,
-      ),
+      prev.map((fila, i) => (i === idx ? { ...fila, [campo]: Math.max(0, valor || 0) } : fila)),
     )
   }
 
@@ -99,23 +97,21 @@ const ModalStock = ({ visible, onClose, producto, onCambio, idSucursalActual }) 
               <div key={fila.id_sucursal} className="d-flex align-items-center border-bottom py-2">
                 <div className="flex-grow-1 small">{fila.sucursal}</div>
                 <div style={{ width: '90px' }}>
-                  <CFormInput
-                    type="number"
-                    min="0"
+                  <CampoNumero
+                    min={0}
                     size="sm"
                     className="text-center"
                     value={fila.stock}
-                    onChange={(e) => handleChange(idx, 'stock', e.target.value)}
+                    onCommit={(n) => handleChange(idx, 'stock', n)}
                   />
                 </div>
                 <div style={{ width: '90px' }}>
-                  <CFormInput
-                    type="number"
-                    min="0"
+                  <CampoNumero
+                    min={0}
                     size="sm"
                     className="text-center"
                     value={fila.stock_minimo}
-                    onChange={(e) => handleChange(idx, 'stock_minimo', e.target.value)}
+                    onCommit={(n) => handleChange(idx, 'stock_minimo', n)}
                   />
                 </div>
               </div>

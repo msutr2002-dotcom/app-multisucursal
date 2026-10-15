@@ -54,7 +54,7 @@ const TipoPagoToggle = ({
   }
 
   return (
-    <div className="d-flex gap-2" role="group" aria-label="Método de pago">
+    <div className="d-flex gap-2 flex-wrap" role="group" aria-label="Método de pago">
       {metodos.map((m) => {
         const activo = m.id === value
         return (
@@ -64,16 +64,17 @@ const TipoPagoToggle = ({
             aria-pressed={activo}
             onClick={() => onChange(m.id)}
             className="btn flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-            style={
-              activo
+            style={{
+              minWidth: '120px',
+              ...(activo
                 ? {
                     borderColor: 'var(--pos-primary)',
                     color: 'var(--pos-primary)',
                     background: 'var(--pos-primary-soft)',
                     fontWeight: 600,
                   }
-                : undefined
-            }
+                : {}),
+            }}
           >
             <CIcon icon={iconoPorNombre(m.name)} />
             {m.name}

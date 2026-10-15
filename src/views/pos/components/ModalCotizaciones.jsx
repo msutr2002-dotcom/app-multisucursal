@@ -49,7 +49,7 @@ const ModalCotizaciones = ({
   onResolver,
   onImprimir,
 }) => (
-  <CModal visible={visible} onClose={onClose} alignment="center" scrollable>
+  <CModal visible={visible} onClose={onClose} alignment="center" className="modal-sheet" scrollable>
     <CModalHeader onClose={onClose}>
       <CModalTitle className="fs-6 fw-bold d-flex align-items-center gap-2">
         <CIcon icon={cilClipboard} />

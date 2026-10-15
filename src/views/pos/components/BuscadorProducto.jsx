@@ -4,6 +4,7 @@ import CIcon from '@coreui/icons-react'
 import { cilSearch } from '@coreui/icons'
 import { formatQ } from '../../../utils/format'
 import ImagenProducto from '../../../components/common/ImagenProducto'
+import { nombreColor } from '../colorUtils'
 
 /**
  * Buscador del POS con RF-V4:
@@ -19,6 +20,7 @@ const BuscadorProducto = ({
   setQuery,
   results,
   loading,
+  coloresPorId = {},
   onSelect,
   seleccionarPorCodigo,
   onEscape,
@@ -193,6 +195,7 @@ const BuscadorProducto = ({
               const stock = p.stock?.find((s) => s.es_actual)?.stock ?? 0
               const precioMin = p.precios?.length ? Math.min(...p.precios.map((x) => x.precio)) : 0
               const resaltado = i === idx
+              const color = nombreColor(coloresPorId, p.id_color)
 
               return (
                 <div
@@ -217,7 +220,14 @@ const BuscadorProducto = ({
                   <span className="d-flex align-items-center gap-2">
                     <ImagenProducto src={p.imagen} alt={p.name} size={38} />
                     <span className="d-flex flex-column">
-                      <strong className="small">{p.name}</strong>
+                      <span className="d-flex align-items-center gap-1">
+                        <strong className="small">{p.name}</strong>
+                        {color && (
+                          <CBadge color={resaltado ? 'light' : 'info'} className="fw-normal">
+                            {color}
+                          </CBadge>
+                        )}
+                      </span>
                       <span
                         className={resaltado ? '' : 'text-body-secondary'}
                         style={{

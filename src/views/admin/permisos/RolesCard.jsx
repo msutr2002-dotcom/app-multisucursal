@@ -15,6 +15,13 @@ const MODULOS = [
   'ingredientes',
   'clientes',
   'catalogos',
+  // Catálogos individuales (permiso por catálogo: ver/crear/editar/eliminar)
+  'colores',
+  'marcas',
+  'categorias',
+  'proveedores',
+  'unidades',
+  'tipos_precio',
   'historial',
   'compras',
   'traslados',

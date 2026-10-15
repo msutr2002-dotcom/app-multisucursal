@@ -15,8 +15,17 @@ import { legacy_createStore as createStore } from 'redux'
  * @property {boolean} sidebarShow - Controls sidebar visibility (true = visible, false = hidden)
  * @property {string} theme - Current theme mode ('light', 'dark', or 'auto')
  */
+/**
+ * En móvil/tablet (<992px, donde el sidebar es off-canvas) arranca cerrado para
+ * no tapar el contenido en el primer render; en escritorio arranca abierto.
+ */
+const arrancaAbierto =
+  typeof window === 'undefined' || !window.matchMedia
+    ? true
+    : window.matchMedia('(min-width: 992px)').matches
+
 const initialState = {
-  sidebarShow: true,
+  sidebarShow: arrancaAbierto,
   theme: 'light',
 }
 

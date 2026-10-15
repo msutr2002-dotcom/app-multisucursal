@@ -136,7 +136,7 @@ const FilaVenta = ({ venta, det, onReintentar }) => {
   return (
     <>
       <div
-        className="d-flex align-items-center gap-3 px-3 py-2 flex-wrap"
+        className="d-flex align-items-center gap-2 px-3 py-2 flex-wrap reportes-cabecera-venta"
         data-testid="venta-bloque"
       >
         <span className="font-monospace small">{String(venta.id).slice(0, 8).toUpperCase()}</span>
@@ -176,38 +176,40 @@ const FilaVenta = ({ venta, det, onReintentar }) => {
             </CButton>
           </div>
         ) : (
-          <table className="table table-sm mb-0" data-testid="tabla-lineas">
-            <thead>
-              <tr className="small text-uppercase text-body-secondary">
-                <th>Cantidad × Producto</th>
-                <th className="text-end">Precio</th>
-                <th>Tipo de precio</th>
-                <th className="text-end">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(det?.items || []).map((it, i) => (
-                <tr key={`${venta.id}-${i}`}>
-                  <td>
-                    {it.cantidad} × {it.producto}{' '}
-                    {it.sku && (
-                      <span className="font-monospace small text-body-secondary">{it.sku}</span>
-                    )}
-                  </td>
-                  <td className="text-end monto">{formatQ(it.unitario)}</td>
-                  <td className="small">{it.tipo || '—'}</td>
-                  <td className="text-end monto">{formatQ(it.subtotal)}</td>
+          <div className="table-responsive">
+            <table className="table table-sm mb-0" data-testid="tabla-lineas">
+              <thead>
+                <tr className="small text-uppercase text-body-secondary">
+                  <th>Cantidad × Producto</th>
+                  <th className="text-end">Precio</th>
+                  <th>Tipo de precio</th>
+                  <th className="text-end">Subtotal</th>
                 </tr>
-              ))}
-              {!det?.items?.length && (
-                <tr>
-                  <td colSpan={4} className="text-center text-body-secondary small py-2">
-                    Sin detalle de productos para esta venta
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {(det?.items || []).map((it, i) => (
+                  <tr key={`${venta.id}-${i}`}>
+                    <td>
+                      {it.cantidad} × {it.producto}{' '}
+                      {it.sku && (
+                        <span className="font-monospace small text-body-secondary">{it.sku}</span>
+                      )}
+                    </td>
+                    <td className="text-end monto">{formatQ(it.unitario)}</td>
+                    <td className="small">{it.tipo || '—'}</td>
+                    <td className="text-end monto">{formatQ(it.subtotal)}</td>
+                  </tr>
+                ))}
+                {!det?.items?.length && (
+                  <tr>
+                    <td colSpan={4} className="text-center text-body-secondary small py-2">
+                      Sin detalle de productos para esta venta
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </>

@@ -24,6 +24,7 @@ import { db } from '../../lib/db'
 import useEstadoRed from '../../hooks/useEstadoRed'
 import { formatQ } from '../../utils/format'
 import { useToast } from '../../components/common/ToastContext'
+import TarjetaRegistro from '../../components/common/TarjetaRegistro'
 import { leerStockPorBodega } from '../../services/catalogSyncService'
 
 const PAGE_SIZE = 25
@@ -214,7 +215,7 @@ const InventarioPage = () => {
           </div>
         ) : (
           <>
-            <div className="table-responsive">
+            <div className="d-none d-md-block table-responsive">
               <CTable align="middle" className="mb-0">
                 <CTableHead>
                   <CTableRow>
@@ -249,6 +250,46 @@ const InventarioPage = () => {
                   })}
                 </CTableBody>
               </CTable>
+            </div>
+
+            {/* Móvil (<768px): una tarjeta por producto con stock y precio */}
+            <div className="d-md-none lista-tarjetas p-2">
+              {paginaProductos.map((p) => {
+                const bajo = stockBajo(p)
+                return (
+                  <TarjetaRegistro
+                    key={p.id}
+                    titulo={p.name}
+                    subtitulo={
+                      <>
+                        {p.sku || 'Sin SKU'} · {p.categoriaNombre}
+                      </>
+                    }
+                    badge={
+                      <div className="d-flex gap-1 flex-wrap justify-content-end">
+                        <CBadge color={bajo ? 'danger' : 'success'}>{p.stockActual}</CBadge>
+                        {bajo && (
+                          <CBadge color="warning" className="text-dark">
+                            Stock bajo
+                          </CBadge>
+                        )}
+                      </div>
+                    }
+                    campos={[
+                      { label: 'Stock', value: p.stockActual },
+                      { label: 'Stock mín.', value: p.stockMinimo },
+                      {
+                        label: 'Precio',
+                        value: (
+                          <span className="monto">
+                            {p.precios && p.precios.length > 0 ? formatQ(p.precios[0].precio) : '—'}
+                          </span>
+                        ),
+                      },
+                    ]}
+                  />
+                )
+              })}
             </div>
             {totalPaginas > 1 && (
               <div className="d-flex justify-content-center mt-3">

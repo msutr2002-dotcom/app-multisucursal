@@ -18,6 +18,7 @@ import { cilPen, cilTrash, cilPlus } from '@coreui/icons'
 import { supabase } from '../../../lib/supabase'
 import { formatQ } from '../../../utils/format'
 import { useToast } from '../../../components/common/ToastContext'
+import { hidratarCatalogoParaSucursal } from '../../../services/catalogSyncService'
 
 const vacio = {
   id: null,
@@ -43,6 +44,15 @@ const ModalPrecios = ({ visible, onClose, producto, tiposPrecio, unidades, onCam
     }, 0)
     return () => clearTimeout(t)
   }, [visible])
+
+  // Tras guardar/eliminar un precio: re-hidratar Dexie (el RPC solo escribe en
+  // Supabase) y avisar al POS (cola-sincronizada) para que refleje el nuevo
+  // precio sin refrescar la página.
+  const refrescarCatalogoYPOS = async () => {
+    const idSucursal = JSON.parse(localStorage.getItem('currentUser') || '{}')?.id_sucursal
+    await hidratarCatalogoParaSucursal(idSucursal)
+    window.dispatchEvent(new CustomEvent('cola-sincronizada', { detail: { tabla: 'precios' } }))
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -96,6 +106,7 @@ const ModalPrecios = ({ visible, onClose, producto, tiposPrecio, unidades, onCam
       showToast('success', 'Éxito', n.id ? 'Precio actualizado' : 'Precio agregado')
       setN(vacio)
       onCambio()
+      await refrescarCatalogoYPOS()
     }
   }
 
@@ -106,6 +117,7 @@ const ModalPrecios = ({ visible, onClose, producto, tiposPrecio, unidades, onCam
     } else {
       showToast('success', 'Éxito', 'Precio eliminado')
       onCambio()
+      await refrescarCatalogoYPOS()
     }
   }
 

@@ -109,6 +109,12 @@ db.version(11).stores({
   stock_bodega: '[id_bodega+id_producto], id_bodega, id_producto',
 })
 
+// catalogos-colores: catálogo global de colores cacheado para los selectores
+// offline (mismo patrón que tipos_precio: id_empresa es solo etiqueta local).
+db.version(12).stores({
+  colores: 'id, id_empresa, name',
+})
+
 export const getLocalDbStatus = async () => {
   const productosCount = await db.productos.count()
   const ventasPendientesSync = await db.cola_sincronizacion

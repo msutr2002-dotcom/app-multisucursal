@@ -1,9 +1,10 @@
 import React from 'react'
-import { CButton, CFormInput } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilMinus, cilPlus, cilX, cilTags } from '@coreui/icons'
 import { formatQ } from '../../../utils/format'
 import { factorDe, maxCantidad } from '../precioUtils'
+import CampoNumero from '../../../components/common/CampoNumero'
 
 const CarritoFila = ({ item, onCantidad, onRemove }) => {
   // Máximo en la unidad de la línea: 1 Caja = 12 unds → floor(stock/12) cajas
@@ -36,16 +37,13 @@ const CarritoFila = ({ item, onCantidad, onRemove }) => {
           >
             <CIcon icon={cilMinus} />
           </CButton>
-          <CFormInput
-            type="number"
+          <CampoNumero
             size="sm"
             value={item.cantidad}
             min={1}
             max={max}
             aria-label={`Cantidad de ${item.name || 'la línea'}`}
-            onChange={(e) =>
-              onCantidad(item.idProducto, parseInt(e.target.value, 10) || 1, item.id_unidad_venta)
-            }
+            onCommit={(n) => onCantidad(item.idProducto, n, item.id_unidad_venta)}
             style={{ width: '54px', textAlign: 'center' }}
           />
           <CButton

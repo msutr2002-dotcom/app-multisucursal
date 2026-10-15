@@ -141,7 +141,13 @@ export async function registrarVentaLocal({
 
       const subtotal = precio * it.cantidad
       total += subtotal
-      renglones.push({ it, k, idProducto: it.id_producto, subtotal })
+      renglones.push({
+        it,
+        k,
+        idProducto: it.id_producto,
+        idColor: producto.id_color ?? null,
+        subtotal,
+      })
     }
 
     // Mayoreo (RF-MY5): un solo redondeo por venta, igual que el servidor
@@ -185,6 +191,7 @@ export async function registrarVentaLocal({
         cantidad: r.it.cantidad,
         subtotal: r.subtotal,
         id_precio_producto: r.it.id_precio_producto,
+        id_color: r.idColor,
       })),
     )
 

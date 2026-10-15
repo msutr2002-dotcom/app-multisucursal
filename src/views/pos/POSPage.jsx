@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { CContainer, CRow, CCol, CBadge, CButton } from '@coreui/react'
+import { CRow, CCol, CBadge, CButton } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilBasket, cilClipboard, cilGrid } from '@coreui/icons'
 import { useBusquedaProductos } from './hooks/useBusquedaProductos'
 import { useCarrito } from './hooks/useCarrito'
+import { grupoColores } from './colorUtils'
 import useFlagsSucursal from '../../hooks/useFlagsSucursal'
 import BuscadorProducto from './components/BuscadorProducto'
 import EstadoVacio from './components/EstadoVacio'
@@ -21,6 +22,7 @@ import ModalPendientes from './components/ModalPendientes'
 import ModalCotizaciones from './components/ModalCotizaciones'
 import ModalImpresionCotizacion from './components/ModalImpresionCotizacion'
 import ConflictResolverModal from './components/ConflictResolverModal'
+import ModalVariantes from './components/ModalVariantes'
 import ConfirmModal from '../dashboard/components/common/ConfirmModal'
 import { formatQ } from '../../utils/format'
 import { hidratarCatalogoParaSucursal, leerStockPorBodega } from '../../services/catalogSyncService'
@@ -70,6 +72,11 @@ const POSPage = () => {
   // cabecera; el modal abre solo al pulsarlo (crítica P1 del critique 2026-10).
   const [cotizacionConflicto, setCotizacionConflicto] = useState(null)
   const [conflictosCount, setConflictosCount] = useState(0)
+
+  // Modal de variantes/subproductos: al tocar un producto con varias opciones
+  // (ej. hamburguesa → americana, torito) se elige la variante antes de agregar.
+  const [varianteProducto, setVarianteProducto] = useState(null)
+  const [modalVariantes, setModalVariantes] = useState(false)
 
   // pos-ux-permisos RF-P2: el botón "Cotizaciones" del encabezado se oculta
   // solo si el admin desmarcó pos_ver_cotizaciones (default visible)
@@ -206,6 +213,7 @@ const POSPage = () => {
     () => localStorage.getItem(`pos_vista_comida_${idSucursal}`) === '1',
   )
   const [productosGrid, setProductosGrid] = useState([])
+  const [coloresPorId, setColoresPorId] = useState({})
 
   const recargarGrid = useCallback(() => {
     if (!idSucursal) return Promise.resolve()
@@ -215,18 +223,37 @@ const POSPage = () => {
       .catch((err) => console.warn('No se pudo cargar el grid de comida:', err))
   }, [idSucursal])
 
+  // papel-iris: mapa `id_color → nombre` para agrupar variantes por color.
+  const cargarColores = useCallback(() => {
+    if (!db.colores) return Promise.resolve()
+    return db.colores
+      .toArray()
+      .then((lista) => setColoresPorId(Object.fromEntries(lista.map((c) => [c.id, c.name]))))
+      .catch(() => {})
+  }, [])
+
   // Refresco del grid de comida al sincronizar/volver en línea (los flags de
   // sucursal los maneja `useFlagsSucursal`).
   useEffect(() => {
     recargarGrid()
-    const refrescar = () => recargarGrid()
+    cargarColores()
+    const refrescar = () => {
+      recargarGrid()
+      cargarColores()
+    }
     window.addEventListener('cola-sincronizada', refrescar)
     window.addEventListener('online', refrescar)
     return () => {
       window.removeEventListener('cola-sincronizada', refrescar)
       window.removeEventListener('online', refrescar)
     }
-  }, [recargarGrid])
+  }, [recargarGrid, cargarColores])
+
+  // papel-iris: colores hermanos del producto seleccionado (mismo nombre base).
+  const coloresHermanos = useMemo(
+    () => grupoColores(selected, productosGrid, coloresPorId, stockDeProducto),
+    [selected, productosGrid, coloresPorId, stockDeProducto],
+  )
 
   const alternarVistaComida = () => {
     const nuevo = !vistaComida
@@ -234,9 +261,30 @@ const POSPage = () => {
     localStorage.setItem(`pos_vista_comida_${idSucursal}`, nuevo ? '1' : '0')
   }
 
-  // Tap del grid: +1 con el tier Auto/NORMAL; addItem fusiona la línea existente.
+  // Tap del grid: si el producto tiene varias opciones (precios o combo),
+  // se abre el modal de variantes para elegir antes de agregar. Si no, se
+  // agrega directamente con +1 del tier Auto/NORMAL.
   const agregarDelGrid = (p) => {
-    carrito.addItem({ ...p, stockActual: stockDeProducto(p) }, 1, null)
+    const tieneVariantes = (p.precios && p.precios.length > 1) || p.contiene_insumos === true
+    if (tieneVariantes) {
+      setVarianteProducto(p)
+      setModalVariantes(true)
+    } else {
+      carrito.addItem({ ...p, stockActual: stockDeProducto(p) }, 1, null)
+    }
+  }
+
+  const agregarVarianteSeleccionada = (variante) => {
+    carrito.addItem(
+      {
+        ...variante,
+        stockActual: stockDeProducto(variante),
+      },
+      1,
+      null,
+    )
+    setModalVariantes(false)
+    setVarianteProducto(null)
   }
 
   // Sin loader: para la carga inicial del efecto.
@@ -341,9 +389,15 @@ const POSPage = () => {
   // Offline-First: refresca el catálogo local en segundo plano (no bloquea la UI).
   // Si falla o está vacío, la búsqueda usa el RPC como fallback.
   useEffect(() => {
-    hidratarCatalogoParaSucursal(idSucursal).catch((err) =>
-      console.warn('No se pudo hidratar el catálogo local:', err),
-    )
+    hidratarCatalogoParaSucursal(idSucursal)
+      .then(() => {
+        // Tras hidratar, avisar al POS (y a otras vistas) para que vuelvan a leer
+        // Dexie y muestren precios/productos actualizados sin refrescar la página.
+        window.dispatchEvent(
+          new CustomEvent('cola-sincronizada', { detail: { tabla: 'catalogo' } }),
+        )
+      })
+      .catch((err) => console.warn('No se pudo hidratar el catálogo local:', err))
   }, [idSucursal])
 
   // Tarea 2.6: cuando la sync remapea el id local al del servidor, el modal de
@@ -980,7 +1034,7 @@ const POSPage = () => {
   }
 
   return (
-    <CContainer fluid className="py-3">
+    <div className="py-3">
       {/* Encabezado */}
       <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <h4 className="mb-0 d-flex align-items-center gap-2">
@@ -1025,8 +1079,9 @@ const POSPage = () => {
           )}
           {/* Acceso directo: la lista no debe depender de tener ítems en el
               carrito (antes solo existía dentro del modal de cobrar).
-              RF-P2: visible salvo que el admin desmarque pos_ver_cotizaciones */}
-          {puedeVerCotizaciones && (
+              RF-P2: visible salvo que el admin desmarque pos_ver_cotizaciones.
+              En modo comida no se usa (se navega por pestañas del grid). */}
+          {!esComida && puedeVerCotizaciones && (
             <CButton
               color="primary"
               variant="outline"
@@ -1064,6 +1119,7 @@ const POSPage = () => {
               setQuery={busqueda.setQuery}
               results={busqueda.results}
               loading={busqueda.loading}
+              coloresPorId={coloresPorId}
               onSelect={busqueda.seleccionar}
               seleccionarPorCodigo={busqueda.seleccionarPorCodigo}
               onEscape={busqueda.clear}
@@ -1083,6 +1139,8 @@ const POSPage = () => {
                 producto={selected}
                 stockBodega={stockBodega.get(selected.id)}
                 idSucursalActual={idSucursal}
+                colores={coloresHermanos}
+                onCambiarColor={(p) => busqueda.seleccionar(p)}
                 onAgregar={(cantidad, override) => {
                   // Stock de la bodega activa (fallback al caché de sucursal — D6)
                   carrito.addItem(
@@ -1225,6 +1283,12 @@ const POSPage = () => {
         cotizacion={impresionCotizacion}
         onClose={() => setImpresionCotizacion(null)}
       />
+      <ModalVariantes
+        visible={modalVariantes}
+        onClose={() => setModalVariantes(false)}
+        producto={varianteProducto}
+        onSeleccionar={agregarVarianteSeleccionada}
+      />
       <ConflictResolverModal
         visible={!!cotizacionConflicto}
         onClose={() => setCotizacionConflicto(null)}
@@ -1252,7 +1316,7 @@ const POSPage = () => {
 
       {/* espacio para que el contenido no quede tapado por la barra + nav */}
       <div className="d-lg-none" style={{ height: '5rem' }} />
-    </CContainer>
+    </div>
   )
 }
 
