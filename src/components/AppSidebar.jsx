@@ -57,14 +57,33 @@ const AppSidebar = () => {
   const permisos = useNavPermissions()
   const { esComida } = useFlagsSucursal()
 
-  const navFiltrado = obtenerNav().filter((item) => {
-    if (!item.modulo) return true // items sin módulo (títulos) siempre se ven
-    // El módulo de ingredientes solo existe en sucursales con
-    // "activar ingredientes" ON (flag de la sucursal, RF-C5).
-    if (item.modulo === 'ingredientes' && !esComida) return false
-    if (permisos === null) return false // resolviendo: no mostrar módulos hasta confirmar
-    return permisos[item.modulo] !== false
-  })
+  // Filtra por permisos. Los títulos de sección (CNavTitle, sin `to`) solo se
+  // conservan si al menos un ítem visible los sigue: si no, un usuario sin
+  // permisos de administración vería el título "Administración" vacío.
+  const navFiltrado = []
+  {
+    const visible = (item) => {
+      // El módulo de ingredientes solo existe en sucursales con
+      // "activar ingredientes" ON (flag de la sucursal, RF-C5).
+      if (item.modulo === 'ingredientes' && !esComida) return false
+      if (!item.modulo) return true // ítems sin módulo (p. ej. Dashboard) siempre visibles
+      if (permisos === null) return false // resolviendo: no mostrar módulos hasta confirmar
+      return permisos[item.modulo] !== false
+    }
+    let tituloPendiente = null
+    for (const item of obtenerNav()) {
+      if (!item.to) {
+        tituloPendiente = item // CNavTitle → se decide al ver el primer ítem visible
+        continue
+      }
+      if (!visible(item)) continue
+      if (tituloPendiente) {
+        navFiltrado.push(tituloPendiente)
+        tituloPendiente = null
+      }
+      navFiltrado.push(item)
+    }
+  }
 
   return (
     <CSidebar
