@@ -11,13 +11,13 @@ import { cilAccountLogout } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 
 import Avatar from '../common/Avatar'
+import { cerrarSesion } from '../../services/sesionService'
 
 const AppHeaderDropdown = () => {
   const navigate = useNavigate()
   const currentUser = JSON.parse(localStorage.getItem('currentUser'))
   const handleLogout = () => {
-    localStorage.removeItem('currentUser')
-    navigate('/login', { replace: true })
+    cerrarSesion(navigate)
   }
   return (
     <CDropdown variant="nav-item">

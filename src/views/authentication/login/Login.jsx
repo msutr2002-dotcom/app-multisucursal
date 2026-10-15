@@ -26,6 +26,7 @@ import {
   hidratarCatalogoParaSucursal,
   hidratarClientes,
 } from '../../../services/catalogSyncService'
+import { marcarActividad } from '../../../services/sesionService'
 
 const Login = () => {
   const [empresa, setEmpresa] = useState(() => {
@@ -133,6 +134,9 @@ const Login = () => {
 
     const isAdmin = rolData?.name === 'Admin'
     localStorage.setItem('currentUser', JSON.stringify(currentUser))
+    // Reinicia el reloj de inactividad: evita que una marca vieja de una
+    // sesión previa cierre esta sesión recién iniciada (specs/sesion-inactividad.md).
+    marcarActividad()
 
     const welcomeToast = (
       <CToast autohide={true} visible={true} color="primary">

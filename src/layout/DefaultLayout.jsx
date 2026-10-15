@@ -22,6 +22,7 @@
 import React from 'react'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
 import MobileNav from '../views/dashboard/components/MobileNav'
+import useCierreInactividad from '../hooks/useCierreInactividad'
 /**
  * DefaultLayout functional component
  *
@@ -36,6 +37,9 @@ import MobileNav from '../views/dashboard/components/MobileNav'
  * @returns {React.ReactElement} Complete application layout
  */
 const DefaultLayout = () => {
+  // Cierra la sesión tras 15 min de inactividad (specs/sesion-inactividad.md).
+  useCierreInactividad()
+
   return (
     <div>
       <AppSidebar />
