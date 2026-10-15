@@ -32,13 +32,17 @@ export function marcarActividad(timestamp = Date.now()) {
 }
 
 /**
- * Cierra la sesión: limpia la sesión local completa y navega a `/login`.
+ * Cierra la sesión: limpia la sesión local y navega a `/login`.
  * Única vía de cierre (logout manual y cierre por inactividad).
+ *
+ * Conserva `empresaSeleccionada` a propósito: es sólo un "recuerdo" del
+ * dispositivo para prefijar el Login (`specs/login-recordar-empresa.md`), no
+ * parte de la sesión. El navegador no comparte `localStorage` entre
+ * dispositivos, así que el recuerdo es por navegador.
  * @param {Function} [navigate] función `navigate` de react-router.
  */
 export function cerrarSesion(navigate) {
   localStorage.removeItem('currentUser')
-  localStorage.removeItem('empresaSeleccionada')
   localStorage.removeItem(CLAVE_ACTIVIDAD)
   if (typeof navigate === 'function') navigate('/login', { replace: true })
 }

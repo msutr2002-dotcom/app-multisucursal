@@ -169,11 +169,6 @@ const Login = () => {
     }, 1500)
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser')
-    localStorage.removeItem('empresaSeleccionada')
-    navigate('/login')
-  }
   return (
     <div className="login">
       <aside className="login-panel">
