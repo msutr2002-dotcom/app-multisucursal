@@ -1,0 +1,15 @@
+{
+  "short_name": "Punto de Venta",
+  "name": "Punto de Venta - Libreria",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0d7a5f",
+  "background_color": "#ffffff"
+}

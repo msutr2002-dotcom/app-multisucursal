@@ -1,0 +1,57 @@
+[
+  {
+    "id": "CP-DASH-001",
+    "escenario": "Visualización correcta del panel principal",
+    "pasos": "1. Ir a #/dashboard. 2. Observar el saludo, el hero \"Ventas de hoy\", las 5 tarjetas y la gráfica \"Ventas del mes\"",
+    "requisitos": "Sesión iniciada como usuario no Admin; ventas y compras registradas en el mes",
+    "datos": "Usuario: alex / alex123 (Gerente, sucursal Ferromax chichi, con ventas/compras reales)",
+    "esperado": "Saludo \"Buenos días/tardes/noches, {nombre}\" con fecha en español; monto de hoy en Q; tarjetas (Productos registrados, Compras del mes, Ventas del mes, Ganancias del mes, Productos con poco stock) con valores; gráfica de barras con total del mes",
+    "real": "Saludo \"Buenas noches, Alex Simaj\" con fecha \"jueves, 8 de octubre de 2026\"; hero \"Ventas de hoy\" = Q200.00; tarjetas [Productos registrados=2, Compras del mes=Q0.00, Ventas del mes=Q350.00, Ganancias del mes=Q350.00, Poco stock=0]; gráfica \"Ventas del mes\" total Q0.00 con canvas",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-DASH-001.png"
+  },
+  {
+    "id": "CP-DASH-002",
+    "escenario": "Navegación desde los accesos del dashboard",
+    "pasos": "1. Ir a #/dashboard. 2. Clic en \"Ir al Punto de Venta\". 3. Volver al dashboard. 4. Clic en \"Productos registrados\" y luego en \"Productos con poco stock\"",
+    "requisitos": "Sesión iniciada",
+    "datos": "Usuario: alex / alex123; accesos del hero y de las tarjetas del dashboard",
+    "esperado": "Cada clic navega a la ruta correspondiente (#/pos, #/productos, #/productos?stock=bajo) sin errores",
+    "real": "Clic \"Ir al Punto de Venta\" → #/pos con buscador visible; \"Productos registrados\" → #/productos con \"Gestión de Productos\"; \"Productos con poco stock\" → #/productos?stock=bajo; sin errores de navegación",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-DASH-002.png"
+  },
+  {
+    "id": "CP-DASH-003",
+    "escenario": "Dashboard sin datos en la sucursal",
+    "pasos": "1. Iniciar sesión en una sucursal sin actividad. 2. Ir a #/dashboard",
+    "requisitos": "Sucursal nueva sin ventas/compras registradas",
+    "datos": "Se intenta con la sucursal de alex/alex123; se inspeccionan las stats reales (get_dashboard_stats) y las sucursales de la empresa vía REST",
+    "esperado": "La vista carga sin errores; el hero muestra Q0.00 y las tarjetas muestran 0; no hay pantalla en blanco",
+    "real": "Escenario no reproducible: la sucursal de la cuenta de prueba sí tiene ventas registradas; sería necesaria una sucursal sin actividad. Stats reales de la sucursal (get_dashboard_stats): ventas_mes=35000, compras_mes=0, productos_registrados=2; dashboard observado con datos: hero=Q200.00, tarjetas=2 | Q0.00 | Q350.00 | Q350.00 | 0; ninguna otra sucursal de la empresa está sin actividad",
+    "estado": "Reprobado",
+    "captura": "docs/capturas/CP-DASH-003.png"
+  },
+  {
+    "id": "CP-DASH-004",
+    "escenario": "Rol Admin redirige al dashboard de administración",
+    "pasos": "1. Ir a #/dashboard con rol Admin",
+    "requisitos": "Sesión iniciada con rol Admin",
+    "datos": "Usuario: system / system321 (Admin, no requiere empresa en el select)",
+    "esperado": "El sistema redirige automáticamente a #/admin-dashboard",
+    "real": "Login system/system321 → #/dashboard redirigió automáticamente a #/admin-dashboard y el contenido admin (\"Resumen de Empresas\") está visible",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-DASH-004.png"
+  },
+  {
+    "id": "CP-DASH-005",
+    "escenario": "Dashboard sin conexión a internet",
+    "pasos": "1. Cortar la conexión de red. 2. Ir a #/dashboard o recargar la página",
+    "requisitos": "Sesión iniciada y sin red",
+    "datos": "alex/alex123 con #/dashboard ya abierto y cargado con red; red cortada con CDP Network.emulateNetworkConditions",
+    "esperado": "La vista no se bloquea ni queda en blanco; no hay toasts; al recuperar la red los datos se actualizan",
+    "real": "Sin red la vista no quedó en blanco (saludo y hero visibles): hero=Q0.00, tarjetas [0 | Q0.00 | Q0.00 | Q0.00 | 0], sin toasts; al recuperar la red y remontar la ruta los datos se actualizaron (hero=Q200.00, tarjetas [2 | Q0.00 | Q350.00 | Q350.00 | 0]). El Dashboard no escucha el evento online: los datos se recargan al remontar la ruta",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-DASH-005.png"
+  }
+]

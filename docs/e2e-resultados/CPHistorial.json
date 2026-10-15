@@ -1,0 +1,112 @@
+[
+  {
+    "id": "CP-HIST-001",
+    "escenario": "Listado de ventas y cotizaciones con paginación",
+    "pasos": "1. Ir a #/historial. 2. Revisar columnas y contador. 3. Cambiar el selector de tipo a \"Solo ventas\" y \"Solo cotizaciones\". 4. Volver a \"Ventas y cotizaciones\"",
+    "requisitos": "Ventas y cotizaciones registradas en la sucursal",
+    "datos": "Usuario alex/alex123 (Gerente, Ferromax chichi); contador \"Mostrando 13 de 13\"; 9 columnas",
+    "esperado": "Título \"Historial de Ventas y Cotizaciones\"; contador \"Mostrando X de Y\"; columnas Fecha, Tipo, Folio, Usuario, Método, Ítems, Total, Estado, Acciones; \"Cargar más\" pagina de 50 en 50",
+    "real": "Título y las 9 columnas presentes; contador \"Mostrando 13 de 13\"; selector tipo: \"Solo ventas\" → 13 fila(s) todas de tipo Venta, \"Solo cotizaciones\" → 0 fila(s) (vacío: sin cotizaciones locales en el dispositivo), de vuelta a \"Ventas y cotizaciones\" → 13 fila(s); \"Cargar más\" oculto porque hay menos de 50 registros (no hay páginas que cargar)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-001.png"
+  },
+  {
+    "id": "CP-HIST-002",
+    "escenario": "Búsqueda por folio o usuario",
+    "pasos": "1. Ir a #/historial. 2. Escribir un folio en \"Buscar por folio o usuario (Enter)\". 3. Presionar Enter. 4. Repetir con un texto inexistente",
+    "requisitos": "Existe al menos una venta registrada",
+    "datos": "Usuario alex/alex123; folio de prueba 718C0ECD (primera fila); texto inexistente \"ZZQQ99NOEXISTE\"",
+    "esperado": "El listado se filtra solo al presionar Enter y muestra el registro coincidente; con texto inexistente se muestra el vacío",
+    "real": "Enter filtró el folio 718C0ECD: 1 fila(s) y contador \"Mostrando 1 de 1\"; con \"ZZQQ99NOEXISTE\" apareció el vacío \"No hay registros con esos filtros\" (0 filas)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-002.png"
+  },
+  {
+    "id": "CP-HIST-003",
+    "escenario": "Filtros de estado, fechas y limpiar",
+    "pasos": "1. Ir a #/historial. 2. Seleccionar \"Completadas\" y luego \"Anuladas\" en el select de estado. 3. Definir fechas desde/hasta. 4. Clic en \"Limpiar\"",
+    "requisitos": "Registros con distintos estados y fechas",
+    "datos": "Usuario: alex / alex123; fechas desde/hasta calculadas en la corrida (rango con ventas y rango futuro sin ventas)",
+    "esperado": "Cada filtro aplica sobre la lista; \"Limpiar\" restaura \"Todos los estados\", limpia las fechas y devuelve el listado completo",
+    "real": "Filtro \"Completadas\" → 9 fila(s) (select=\"completada\"); \"Anuladas\" → 2 fila(s) todas anuladas; fechas 2026-09-08→2026-10-08 → 13 fila(s) y desde 2030-01-01 → vacío; \"Limpiar\" restauró estado=\"Todos los estados\", fechas vacías y 13 fila(s)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-003.png"
+  },
+  {
+    "id": "CP-HIST-004",
+    "escenario": "Detalle e impresión de comprobante",
+    "pasos": "1. Ir a #/historial. 2. Clic en una venta completada. 3. Revisar el modal \"Detalle de venta\". 4. Clic en \"Imprimir comprobante\" y cerrar",
+    "requisitos": "Venta completada existente",
+    "datos": "Usuario alex/alex123; venta completada 718C0ECD",
+    "esperado": "Modal con Fecha, Usuario, Método de pago, Estado, Cliente, ítems y Total; \"Imprimir comprobante\" habilitado abre el comprobante con marca de agua si aún no sincroniza",
+    "real": "Detalle de la venta 718C0ECD con Fecha, Usuario, Método de pago, Estado, Cliente, ítems (Producto/Cantidad/Precio unit./Subtotal) y Total; botón \"Imprimir comprobante\" habilitado → abrió el modal \"Comprobante de venta\" y se cerró con \"Cerrar\" (NO se pulsó \"Ticket 80 mm\"/\"Carta\" porque esos sí llaman a window.print())",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-004.png"
+  },
+  {
+    "id": "CP-HIST-005",
+    "escenario": "Anulación de venta completada con red",
+    "pasos": "1. Ir a #/historial. 2. Clic en el ícono de papelera de una venta completada. 3. Revisar el modal \"Anular venta\". 4. Escribir un motivo. 5. Clic en \"Anular venta\"",
+    "requisitos": "Usuario con permiso historial/eliminar, red disponible, venta completada",
+    "datos": "Usuario alex/alex123; venta completada anulada: 718C0ECD; motivo \"Prueba E2E CP-HIST-005\"",
+    "esperado": "El modal muestra \"¿Anular la venta XXXXXXXX por Q…? El stock se devolverá a la sucursal.\"; toast \"Venta anulada / El stock fue devuelto a la sucursal\"; el estado cambia a anulada",
+    "real": "Anulada la venta 718C0ECD con motivo \"Prueba E2E CP-HIST-005\": modal con \"¿Anular la venta 718C0ECD por Q…\" y leyenda de devolución de stock; toast \"Venta anulada El stock fue devuelto a la sucursal\"; la fila ahora muestra \"08/10/2026, 08:35 p. m. Venta 718C0ECD Alex Simaj Efectivo 1 ítem Q40.00 anulada\" (queda 1 venta anulada de prueba)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-005.png"
+  },
+  {
+    "id": "CP-HIST-006",
+    "escenario": "Intento de anulación sin conexión",
+    "pasos": "1. Abrir el modal de anulación de una venta completada con red. 2. Cortar la red. 3. Clic en \"Anular venta\". 4. Restaurar la red y revisar el estado de la venta",
+    "requisitos": "Red disponible para abrir la papelera y luego caída (sin red la papelera se oculta)",
+    "datos": "Usuario alex/alex123; venta completada 718C0ECD; red cortada vía CDP",
+    "esperado": "Toast warning \"La anulación se registra en el servidor: inténtala de nuevo al recuperar la red.\"; el estado no cambia",
+    "real": "navigator.onLine=false; alerta offline visible; con el modal abierto \"Anular venta ¿Anular la venta 718C0ECD por Q40.00? El stock se devolve…\" la confirmación mostró el toast \"Sin conexión La anulación se registra en el servidor: inténtala de nuevo al recuperar la red.\" y el estado de 718C0ECD sigue \"completada\" (anuladas antes 2 → después 2, delta 0). Nota: sin red el listado local mostró 0 fila(s) (el espejo IndexedDB de este equipo no tiene ventas espejadas)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-006.png"
+  },
+  {
+    "id": "CP-HIST-007",
+    "escenario": "Edición y quita del cliente de la venta",
+    "pasos": "1. Abrir el detalle de una venta. 2. Clic en \"Editar\". 3. Escribir un nombre de cliente y \"Guardar\". 4. Repetir y dejar el campo vacío",
+    "requisitos": "Usuario con permiso historial/editar, red disponible",
+    "datos": "Usuario alex/alex123; venta completada 718C0ECD; cliente \"Cliente CP-HIST 007\" (se agrega y se quita)",
+    "esperado": "Con nombre: se guarda el cliente y aparece en el detalle. Vacío: toast \"Cliente quitado de la venta\" y el detalle vuelve a \"Sin cliente\"",
+    "real": "Venta 718C0ECD: \"Editar\" → \"Cliente CP-HIST 007\" → Guardar → toast \"Éxito Cliente guardado\" y el detalle muestra \"Cliente CP-HIST 007\"; de nuevo \"Editar\" (campo precargado con \"Cliente CP-HIST 007\") → vacío → Guardar → toast \"Éxito Cliente quitado de la venta\" y el detalle vuelve a \"Sin cliente\"",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-007.png"
+  },
+  {
+    "id": "CP-HIST-008",
+    "escenario": "Búsqueda sin resultados",
+    "pasos": "1. Ir a #/historial. 2. Aplicar un folio inexistente con Enter",
+    "requisitos": "Filtros que no coinciden con ningún registro",
+    "datos": "Usuario: alex / alex123; búsqueda inexistente \"ZZQQ99NOEXISTE\"",
+    "esperado": "Se muestra \"No hay registros con esos filtros\" (agrega \"en el almacenamiento local\" si está offline); sin errores",
+    "real": "Búsqueda \"ZZQQ99NOEXISTE\" con Enter → 0 filas y mensaje exacto \"No hay registros con esos filtros\"; sin toasts de error",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-008.png"
+  },
+  {
+    "id": "CP-HIST-009",
+    "escenario": "Acceso sin permiso de ver",
+    "pasos": "1. Poner historial/ver=false al rol Gerente. 2. Intentar entrar a #/historial. 3. Restaurar el permiso",
+    "requisitos": "Rol con historial/ver desactivado temporalmente (permisoTemporal)",
+    "datos": "Usuario: alex / alex123; rol Gerente (3cf414b4-156f-40d2-a6a2-715ad8113283) con historial/ver=false",
+    "esperado": "El sistema redirige a #/dashboard",
+    "real": "Redirigió a #/dashboard al entrar a #/historial con historial/ver=false (permiso restaurado por permisoTemporal)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-009.png"
+  },
+  {
+    "id": "CP-HIST-010",
+    "escenario": "Anulación sin permiso de eliminar",
+    "pasos": "1. Poner historial/eliminar=false (ver=true) al rol Gerente. 2. Ir a #/historial. 3. Revisar las acciones de las filas. 4. Restaurar el permiso",
+    "requisitos": "Rol con historial/ver pero sin historial/eliminar (permisoTemporal)",
+    "datos": "Usuario: alex / alex123; rol Gerente con historial/eliminar=false y ver=true de forma temporal",
+    "esperado": "El botón de papelera (anular) no está visible en las filas completadas; el resto del listado funciona",
+    "real": "Con historial/eliminar=false: 13 fila(s) visibles, 0 papeleras (botones title con \"anular\") y 13 botón(es) \"Ver detalle\" activos; permiso restaurado por permisoTemporal",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-HIST-010.png"
+  }
+]

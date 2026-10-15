@@ -1,0 +1,112 @@
+[
+  {
+    "id": "CP-CAT-001",
+    "escenario": "Crear un registro en un catálogo",
+    "pasos": "1. Ir a #/catalogos. 2. Verificar la pestaña \"Marcas\". 3. Clic en el botón de crear (\"+ Marca\"). 4. Escribir \"Nombre *\" = \"Marca E2E CP\". 5. Clic en \"Crear\"",
+    "requisitos": "Usuario con permiso catalogos/crear; red disponible; empresa activa con el catálogo Marcas vacío",
+    "datos": "Usuario alex/alex123 (Gerente, Ferromax); nombre de prueba \"Marca E2E CP\" (se elimina en CP-CAT-003 y se repasa en el finally)",
+    "esperado": "Toast \"Marca creada\"; el registro aparece en la lista de tarjetas y el modal se cierra",
+    "real": "Modal \"Nueva Marca\" · \"Nombre *\" = \"Marca E2E CP\" · \"Crear\" → toast \"Éxito Marca creada\" · tarjeta visible con texto \"Marca E2E CP\"",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-001.png"
+  },
+  {
+    "id": "CP-CAT-002",
+    "escenario": "Editar un registro existente",
+    "pasos": "1. Ir a #/catalogos. 2. Clic en \"Editar\" (title) de la tarjeta \"Marca E2E CP\". 3. Cambiar \"Nombre *\" a \"Marca E2E CP 2\". 4. Clic en \"Guardar Cambios\"",
+    "requisitos": "Registro \"Marca E2E CP\" creado por CP-CAT-001 y permiso catalogos/editar con red",
+    "datos": "Nombre original \"Marca E2E CP\" (el modal debe abrir precargado con ese valor); nombre nuevo \"Marca E2E CP 2\"",
+    "esperado": "Toast \"Guardado correctamente\"; la tarjeta muestra \"Marca E2E CP 2\" y ya no aparece \"Marca E2E CP\"",
+    "real": "Modal \"Editar Marca\" precargado con \"Marca E2E CP\" → \"Marca E2E CP 2\" · \"Guardar Cambios\" → toast \"Éxito Guardado correctamente\" · tarjeta actualizada y nombre viejo ausente",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-002.png"
+  },
+  {
+    "id": "CP-CAT-003",
+    "escenario": "Eliminar un registro con confirmación",
+    "pasos": "1. Clic en \"Eliminar\" (title) de la tarjeta \"Marca E2E CP 2\". 2. Revisar el mensaje del modal de confirmación. 3. Clic en \"Eliminar\". 4. Repetir para \"Proveedor E2E CAT\" y \"Unidad E2E CP\" si llegaron a crearse",
+    "requisitos": "Registros de prueba creados por la propia suite; permiso catalogos/eliminar; red disponible",
+    "datos": "A borrar: \"Marca E2E CP 2\", \"Proveedor E2E CAT\" (cp@prueba.com) y \"Unidad E2E CP\" (E2E); no se tocan \"Unidad\"/UNI ni MAYOREO/NORMAL",
+    "esperado": "Mensaje \"¿Eliminar \"X\"? Esta acción no se puede deshacer.\"; toast \"Registro eliminado\"; la tarjeta desaparece de la lista",
+    "real": "Confirmación exacta \"¿Eliminar \"Marca E2E CP 2\"? Esta acción no se puede deshacer.\" → toast \"Éxito Registro eliminado\" y tarjeta desaparecida (1 pasada) · Proveedor E2E CAT: eliminada en 1 pasada(s) · Unidad E2E CP: eliminada en 1 pasada(s) · verificado contra el servidor: sin registros de prueba",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-003.png"
+  },
+  {
+    "id": "CP-CAT-004",
+    "escenario": "Navegación entre los 5 catálogos",
+    "pasos": "1. Ir a #/catalogos. 2. Confirmar que la pestaña inicial es \"Marcas\". 3. Recorrer Marcas, Categorías, Proveedores, Unidades y Tipos de Precio. 4. En cada una revisar el título, el botón de creación y el contenido",
+    "requisitos": "Sesión con empresa activa y catálogos de la empresa cargados desde el servidor (red disponible)",
+    "datos": "Estado real de Ferromax al inicio: Marcas 0, Categorías 0, Proveedores 0 (o 1 con el residual \"Proveedor E2E CP\" que deja la suite Compras), Unidades 1 (\"Unidad\"/UNI/Activa), Tipos de Precio MAYOREO y NORMAL",
+    "esperado": "Cada pestaña muestra su botón con el nombre correcto (\"Marca\", \"Categoría\", \"Proveedor\", \"Unidad\", \"Tipo de Precio\", con ícono \"+\"); las listas vacías muestran \"Crea el primer registro con el botón «X».\" y las no vacías sus registros; pestaña inicial: Marcas",
+    "real": "Pestaña inicial \"Marcas\"; 5 pestañas recorridas · Marcas: vacía + botón \"Marca\" · Categorías: vacía + botón \"Categoría\" · Proveedores: botón \"Proveedor\" + 2 registro(s) (Proveedor E2E CP, Proveedor E2E CP) · Unidades: botón \"Unidad\" + 1 registro(s) (Unidad) · Tipos de Precio: botón \"Tipo de Precio\" + 2 registro(s) (MAYOREO, NORMAL) · Unidades/badges: \"Unidad UNI Activa\"",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-004.png"
+  },
+  {
+    "id": "CP-CAT-005",
+    "escenario": "Crear registro sin nombre",
+    "pasos": "1. Ir a #/catalogos. 2. Clic en el botón de crear. 3. Dejar \"Nombre *\" vacío. 4. Intentar guardar con \"Crear\". 5. Clic en \"Cancelar\"",
+    "requisitos": "Modal \"Nueva Marca\" abierto con el campo \"Nombre *\" vacío",
+    "datos": "Campo \"Nombre *\" con atributo required nativo; botón \"Crear\" (type=submit)",
+    "esperado": "El campo \"Nombre *\" es obligatorio: la validación nativa del navegador bloquea el envío, el modal sigue abierto y no se crea ningún registro",
+    "real": "Campo \"Nombre *\" required=true y vacío → clic en \"Crear\" bloqueado por validación nativa (checkValidity=false), modal abierto, 0 toasts y marcas sin cambios (1); cerrado con \"Cancelar\"",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-005.png"
+  },
+  {
+    "id": "CP-CAT-006",
+    "escenario": "Correo inválido en proveedor",
+    "pasos": "1. Ir a la pestaña \"Proveedores\". 2. Clic en \"+ Proveedor\". 3. Escribir nombre \"Proveedor E2E CAT\" y correo \"no-es-correo\". 4. Intentar guardar. 5. Corregir el correo a \"cp@prueba.com\" y volver a guardar",
+    "requisitos": "Permiso catalogos/crear con red (la pestaña puede tener el proveedor residual de la suite Compras)",
+    "datos": "Correo inválido \"no-es-correo\" (input type=email) y correo válido \"cp@prueba.com\"; el registro creado se elimina en la limpieza",
+    "esperado": "El input \"Correo\" (type email) bloquea el envío con correo inválido (el modal no se cierra); con correo válido se guarda con datos de contacto (address · email · tel) y toast \"Proveedor creada\"",
+    "real": "Modal \"Nueva Proveedor\" con campos Dirección/Correo(type=email)/Teléfono · hallazgo: la app titula \"Nueva Proveedor\" y docs/casos-prueba-usuario.md (CP-CAT-006) lo llama \"Nuevo Proveedor\" · correo \"no-es-correo\" → checkValidity=false, modal abierto, 0 toasts, proveedores sin cambios (2) → correo \"cp@prueba.com\" → toast \"Éxito Proveedor creada\" y tarjeta \"Proveedor E2E CAT cp@prueba.com\" (registro eliminado en la limpieza)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-006.png"
+  },
+  {
+    "id": "CP-CAT-007",
+    "escenario": "Crear una unidad de medida",
+    "pasos": "1. Ir a la pestaña \"Unidades\". 2. Clic en \"+ Unidad\". 3. Completar Nombre \"Unidad E2E CP\", Abreviatura \"E2E\", Equivalencia 1 y el switch \"Activa\". 4. Clic en \"Crear\"",
+    "requisitos": "Pestaña Unidades con la unidad \"Unidad\" y permiso catalogos/crear con red",
+    "datos": "Nombre \"Unidad E2E CP\", Abreviatura \"E2E\" (placeholder del campo: UNI), Equivalencia 1, switch \"Activa\" activado por defecto; se elimina en la limpieza",
+    "esperado": "Toast \"Unidad creada\"; la tarjeta muestra el nombre con el badge de abreviatura \"E2E\" y el badge \"Activa\"",
+    "real": "Modal \"Nueva Unidad\" con Nombre=\"Unidad E2E CP\", Abreviatura=\"E2E\", Equivalencia=1 y switch \"Activa\" → toast \"Éxito Unidad creada\" · tarjeta \"Unidad E2E CP E2E Activa\" (unidad eliminada en la limpieza)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-007.png"
+  },
+  {
+    "id": "CP-CAT-008",
+    "escenario": "Catálogos sin conexión",
+    "pasos": "1. Abrir #/catalogos con red. 2. Abrir el modal de confirmación de \"Unidad E2E CP\". 3. Cortar la red. 4. Revisar la alerta. 5. Confirmar la eliminación sin red. 6. Abrir \"Nueva Marca\" con red, cortar la red y pulsar \"Crear\". 7. Recargar #/catalogos sin red. 8. Restaurar la red",
+    "requisitos": "#/catalogos ya abierto con red (chunk lazy caliente), IndexedDB hidratado y corte de red por CDP (Network.enable antes de emulateNetworkConditions)",
+    "datos": "Red cortada con Network.emulateNetworkConditions offline=true; nombre fantasma \"Marca Fantasma CP\" que NO debe guardarse; \"Unidad E2E CP\" como víctima del intento de borrado offline",
+    "esperado": "Alerta \"Sin conexión. Catálogos desde almacenamiento local — solo lectura.\"; guardar responde \"Sin conexión: no se pueden guardar catálogos\" y eliminar \"No se pueden eliminar registros sin red\"; ningún registro cambia",
+    "real": "red cortada por CDP (navigator.onLine=false) · confirmación con red: \"¿Eliminar \"Unidad E2E CP\"? Esta acción no se puede deshacer.\" · alerta offline \"Sin conexión. Catálogos desde almacenamiento local — solo lectura.\" y botón de crear oculto · eliminar sin red → toast \"Sin conexión No se pueden eliminar registros sin red\" · tras restaurar la red \"Unidad E2E CP\" sigue en el servidor · guardar sin red → toast \"Error Sin conexión: no se pueden guardar catálogos\" (modal abierto) · recarga sin red: alerta visible, botón oculto, mensaje local \"No hay datos en el almacenamiento local.\" = sí · marcas intactas tras restaurar la red (1)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-008.png"
+  },
+  {
+    "id": "CP-CAT-009",
+    "escenario": "Permisos de creación/edición/eliminación",
+    "pasos": "1. Con catalogos/crear=false (permiso temporal) recargar #/catalogos y revisar los 5 botones \"+ ...\". 2. Con catalogos/editar=false y catalogos/eliminar=false recargar y revisar los iconos de las tarjetas",
+    "requisitos": "Red disponible (permisoService re-consulta has_permission con red y cachea el resultado); permisoTemporal restaura el rol al salir",
+    "datos": "Rol Gerente 3cf414b4-156f-40d2-a6a2-715ad8113283 con catalogos/crear=false y luego editar=false y eliminar=false de forma temporal; estado base 4/4",
+    "esperado": "Los botones \"+ ...\" y los iconos Editar/Eliminar sin permiso no están visibles; el resto de la pestaña (título, pestañas y listado) se consulta normalmente",
+    "real": "crear=false: 5/5 pestañas sin botón \"+ ...\" (has_permission re-consultado=sí, listado operativo, errores de consola: 0) | editar=false y eliminar=false: 0 iconos \"Editar\"/\"Eliminar\" en las tarjetas, botón \"+ Marca\" y listado siguen visibles (has_permission re-consultado=sí)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-009.png"
+  },
+  {
+    "id": "CP-CAT-010",
+    "escenario": "Lista de catálogo vacía",
+    "pasos": "1. Ir a #/catalogos con red y el catálogo Marcas sin registros. 2. Revisar el mensaje de vacío y la consola",
+    "requisitos": "Catálogo Marcas vacío en el servidor y con red (offline mostraría \"No hay datos en el almacenamiento local.\")",
+    "datos": "Empresa Ferromax con marcas, categorías y proveedores vacíos al inicio de la suite (unidad \"Unidad\"/UNI y tipos MAYOREO/NORMAL sí existen)",
+    "esperado": "Mensaje \"Crea el primer registro con el botón «Marca».\"; la pestaña inicial es Marcas; sin errores no capturados en consola",
+    "real": "Pestaña inicial \"Marcas\" · marcas en servidor: 0 · mensaje exacto \"Crea el primer registro con el botón «Marca».\" visible · sin errores no capturados en consola (window.onerror instalado tras el login)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-CAT-010.png"
+  }
+]

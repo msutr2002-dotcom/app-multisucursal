@@ -1,0 +1,100 @@
+{
+  "modulo": "facturas-sat",
+  "fecha": "2026-10-13T05:08:18.924Z",
+  "sufix": "62111",
+  "resultados": [
+    {
+      "n": "nav muestra \"Facturación\" para Admin",
+      "ok": true
+    },
+    {
+      "n": "alta de cliente con NIT (toast Cliente creado)",
+      "ok": true
+    },
+    {
+      "n": "venta enlazada con NIT registrada",
+      "ok": true
+    },
+    {
+      "n": "atajo \"Emitir factura\" visible y habilitado (con red)",
+      "ok": true
+    },
+    {
+      "n": "folio de factura válido: A-0000004",
+      "ok": true
+    },
+    {
+      "n": "sin leyenda \"PENDIENTE DE SINCRONIZACIÓN FISCAL\" (D4)",
+      "ok": true
+    },
+    {
+      "n": "sin texto \"SIMULACIÓN\" (D4)",
+      "ok": true
+    },
+    {
+      "n": "NIT del cliente en la factura",
+      "ok": true
+    },
+    {
+      "n": "@page 80mm auto en impresión de ticket",
+      "ok": true
+    },
+    {
+      "n": "@page letter + clase .comprobante-carta en impresión carta",
+      "ok": true
+    },
+    {
+      "n": "venta casual (sin cliente) registrada",
+      "ok": true
+    },
+    {
+      "n": "rechazo claro: venta sin NIT no se factura",
+      "ok": true
+    },
+    {
+      "n": "módulo Facturación lista facturas del servidor",
+      "ok": true
+    },
+    {
+      "n": "búsqueda por NIT devuelve la factura emitida",
+      "ok": true
+    },
+    {
+      "n": "ver factura desde el módulo muestra el mismo folio",
+      "ok": true
+    },
+    {
+      "n": "reimpresión sin marca de agua",
+      "ok": true
+    },
+    {
+      "n": "servidor: get_facturas → exactamente 1 factura para el NIT",
+      "ok": true
+    },
+    {
+      "n": "servidor: get_factura con folio, NIT e ítems",
+      "ok": true
+    },
+    {
+      "n": "offline: aviso \"viendo las facturas guardadas en este equipo\"",
+      "ok": true
+    },
+    {
+      "n": "offline: la factura emitida sigue en el listado (espejo local)",
+      "ok": true
+    },
+    {
+      "n": "offline: reimpresión desde el espejo local con el mismo folio",
+      "ok": true
+    },
+    {
+      "n": "limpieza: cliente de prueba desactivado",
+      "ok": true
+    },
+    {
+      "n": "consola sin errores SEVERE de la app",
+      "ok": true
+    }
+  ],
+  "fallos": 0
+}

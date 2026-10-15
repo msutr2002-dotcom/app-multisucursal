@@ -1,0 +1,104 @@
+{
+  "fecha": "2026-10-13T01:53:09.348Z",
+  "total": 24,
+  "ok": 24,
+  "fallos": 0,
+  "detalles": [
+    {
+      "n": "alta con NIT (toast Cliente creado)",
+      "ok": true
+    },
+    {
+      "n": "fila T6-001 visible en la lista",
+      "ok": true
+    },
+    {
+      "n": "homónimo sin NIT rechazado con mensaje",
+      "ok": true
+    },
+    {
+      "n": "homónimo con NIT distinto permitido (2 filas)",
+      "ok": true
+    },
+    {
+      "n": "búsqueda \"Task6\" muestra ambas filas",
+      "ok": true
+    },
+    {
+      "n": "búsqueda filtra (no arrastra otros clientes)",
+      "ok": true
+    },
+    {
+      "n": "editar teléfono persiste en la lista",
+      "ok": true
+    },
+    {
+      "n": "detalle con stats y \"Sin ventas registradas\"",
+      "ok": true
+    },
+    {
+      "n": "desactivar: la fila sale de la lista por defecto",
+      "ok": true
+    },
+    {
+      "n": "\"Ver inactivos\" muestra T6-002 con badge Inactivo",
+      "ok": true
+    },
+    {
+      "n": "datalist muestra el cliente activo como \"Nombre (NIT)\"",
+      "ok": true
+    },
+    {
+      "n": "T6-002 inactiva NO aparece en el datalist",
+      "ok": true
+    },
+    {
+      "n": "el campo NIT aparece al escribir un nombre",
+      "ok": true
+    },
+    {
+      "n": "NIT auto-llena el nombre con su identidad",
+      "ok": true
+    },
+    {
+      "n": "badge \"Cliente registrado\" (modo enlazado)",
+      "ok": true
+    },
+    {
+      "n": "modo casual detectado (sin perfil, solo ticket)",
+      "ok": true
+    },
+    {
+      "n": "venta CASUAL registrada",
+      "ok": true
+    },
+    {
+      "n": "opción exacta del datalist = enlazado",
+      "ok": true
+    },
+    {
+      "n": "venta ENLAZADA registrada",
+      "ok": true
+    },
+    {
+      "n": "stats: T6-001 con n_ventas=1 (solo la enlazada) [total=200]",
+      "ok": true
+    },
+    {
+      "n": "servidor: venta casual guarda cliente_nombre (ticket muestra el nombre)",
+      "ok": true
+    },
+    {
+      "n": "servidor: venta enlazada resuelve nombre vía id_cliente",
+      "ok": true
+    },
+    {
+      "n": "limpieza: T6-001 desactivada (ambas filas de prueba inactivas)",
+      "ok": true
+    },
+    {
+      "n": "consola sin errores SEVERE de la app",
+      "ok": true
+    }
+  ]
+}

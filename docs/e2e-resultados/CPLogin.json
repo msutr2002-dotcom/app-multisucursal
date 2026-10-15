@@ -1,0 +1,57 @@
+[
+  {
+    "id": "CP-LOGIN-001",
+    "escenario": "Inicio de sesión exitoso con credenciales correctas",
+    "pasos": "1. Ir a la página de login. 2. Ingresar usuario válido. 3. Ingresar contraseña válida. 4. Seleccionar la empresa correcta en el select. 5. Hacer clic en \"Ingresar\"",
+    "requisitos": "El usuario está registrado en la base de datos y su empresa está activa",
+    "datos": "Usuario: alex / alex123 (rol Gerente, sucursal Ferromax chichi)",
+    "esperado": "Aparece toast \"Bienvenido — Sesion iniciada correctamente. Redirigiendo...\" y el sistema redirige al usuario a #/dashboard (Admin → #/admin-dashboard)",
+    "real": "Toast de bienvenida presente y redirección a #/dashboard tras iniciar sesión",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-LOGIN-001.png"
+  },
+  {
+    "id": "CP-LOGIN-002",
+    "escenario": "Inicio de sesión con usuario inexistente",
+    "pasos": "1. Ir a la página de login. 2. Ingresar un usuario inexistente. 3. Ingresar cualquier contraseña. 4. Seleccionar empresa. 5. Clic en \"Ingresar\"",
+    "requisitos": "Se conoce un usuario no registrado",
+    "datos": "Usuario: usuario_no_existe_cp / clave arbitraria",
+    "esperado": "Se muestra alerta roja \"Usuario no encontrado. Verifique el usuario\"; no se inicia sesión",
+    "real": "Se observó la alerta \"Usuario no encontrado. Verifique el usuario\" y la sesión no inició (hash #/login)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-LOGIN-002.png"
+  },
+  {
+    "id": "CP-LOGIN-003",
+    "escenario": "Inicio de sesión con contraseña incorrecta",
+    "pasos": "1. Ir a la página de login. 2. Ingresar usuario válido. 3. Ingresar contraseña incorrecta. 4. Seleccionar empresa. 5. Clic en \"Ingresar\"",
+    "requisitos": "El usuario existe en la base de datos",
+    "datos": "Usuario: alex con clave errónea \"clave_errada_cp\"",
+    "esperado": "Se muestra alerta roja \"Contraseña incorrecta\"; no se inicia sesión",
+    "real": "Se observó la alerta \"Contraseña incorrecta\" y la sesión no inició (hash #/login)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-LOGIN-003.png"
+  },
+  {
+    "id": "CP-LOGIN-004",
+    "escenario": "Inicio de sesión sin seleccionar empresa",
+    "pasos": "1. Ir a la página de login. 2. Ingresar usuario y contraseña válidos. 3. Dejar el select de empresa en \"Selecciona tu empresa\". 4. Clic en \"Ingresar\"",
+    "requisitos": "El usuario existe y tiene contraseña correcta",
+    "datos": "Usuario: alex / alex123 con empresa vacía",
+    "esperado": "Se muestra alerta amarilla \"Debe seleccionar una empresa para continuar\"; no se inicia sesión",
+    "real": "Se observó la alerta \"Debe seleccionar una empresa para continuar\" y la sesión no inició (hash #/login)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-LOGIN-004.png"
+  },
+  {
+    "id": "CP-LOGIN-005",
+    "escenario": "Selección de empresa que no corresponde al usuario",
+    "pasos": "1. Ir a la página de login. 2. Ingresar usuario y contraseña válidos. 3. Seleccionar una empresa distinta a la de la sucursal del usuario. 4. Clic en \"Ingresar\"",
+    "requisitos": "El usuario existe y tiene contraseña correcta",
+    "datos": "Usuario: alex / alex123 con la primera empresa del select que NO sea la suya",
+    "esperado": "Se muestra alerta \"No pertenece a esta empresa. Seleccione la empresa correcta\"; no se inicia sesión",
+    "real": "Se observó la alerta \"No pertenece a esta empresa. Seleccione la empresa correcta\" con empresa e7203a75… (hash #/login)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-LOGIN-005.png"
+  }
+]

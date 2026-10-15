@@ -1,0 +1,72 @@
+{
+  "modulo": "mayoreo",
+  "fecha": "2026-10-13T03:11:01.096Z",
+  "sufix": "33234",
+  "resultados": [
+    {
+      "n": "alta con descuento 10% (toast Cliente creado)",
+      "ok": true
+    },
+    {
+      "n": "badge Mayoreo \"10%\" en la lista",
+      "ok": true
+    },
+    {
+      "n": "editar a 12.5% → badge \"12.5%\"",
+      "ok": true
+    },
+    {
+      "n": "resumen muestra \"Descuento mayoreo (12.5%)\"",
+      "ok": true
+    },
+    {
+      "n": "TOTAL a cobrar Q1.75 (Q2.00 − 12.5%)",
+      "ok": true
+    },
+    {
+      "n": "badge \"mayoreo 12.5%\" en el cliente enlazado",
+      "ok": true
+    },
+    {
+      "n": "venta enlazada con descuento registrada",
+      "ok": true
+    },
+    {
+      "n": "comprobante: Total Q1.75 con línea de descuento",
+      "ok": true
+    },
+    {
+      "n": "casual: sin fila de descuento en el resumen",
+      "ok": true
+    },
+    {
+      "n": "casual: TOTAL Q2.00 sin rebaja",
+      "ok": true
+    },
+    {
+      "n": "venta casual registrada",
+      "ok": true
+    },
+    {
+      "n": "servidor: get_clientes descuento_bp=1250",
+      "ok": true
+    },
+    {
+      "n": "servidor: n_ventas=1 (solo la enlazada)",
+      "ok": true
+    },
+    {
+      "n": "servidor: venta 200−25=175 con bp 1250 (mismo redondeo que el cliente)",
+      "ok": true
+    },
+    {
+      "n": "limpieza: cliente de prueba desactivado",
+      "ok": true
+    },
+    {
+      "n": "consola sin errores SEVERE de la app",
+      "ok": true
+    }
+  ],
+  "fallos": 0
+}

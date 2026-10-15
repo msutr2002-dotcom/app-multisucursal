@@ -1,0 +1,59 @@
+{
+  "modulo": "reportes-impresion",
+  "fecha": "2026-10-13T03:55:27.376Z",
+  "resultados": [
+    {
+      "n": "reporte cargado (resumen visible)",
+      "ok": true
+    },
+    {
+      "n": "botón \"Imprimir reporte\" habilitado",
+      "ok": true
+    },
+    {
+      "n": "encabezado \"Reporte de ventas\"",
+      "ok": true
+    },
+    {
+      "n": "encabezado con sucursal/empresa",
+      "ok": true
+    },
+    {
+      "n": "período con fechas",
+      "ok": true
+    },
+    {
+      "n": "resumen (Total cobrado)",
+      "ok": true
+    },
+    {
+      "n": "al menos una venta listada",
+      "ok": true
+    },
+    {
+      "n": "leyenda \"no es comprobante fiscal\"",
+      "ok": true
+    },
+    {
+      "n": "total general",
+      "ok": true
+    },
+    {
+      "n": "window.print() fue invocado una vez",
+      "ok": true
+    },
+    {
+      "n": "limpieza: clase body.imprimir-reporte removida",
+      "ok": true
+    },
+    {
+      "n": "segunda impresión refleja el filtro \"System Admin\"",
+      "ok": true
+    },
+    {
+      "n": "consola sin errores SEVERE de la app",
+      "ok": true
+    }
+  ],
+  "fallos": 0
+}

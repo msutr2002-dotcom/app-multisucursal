@@ -1,0 +1,112 @@
+[
+  {
+    "id": "CP-COMP-001",
+    "escenario": "Registrar una nueva compra",
+    "pasos": "1. Ir a #/compras. 2. Clic en \"Nueva compra\". 3. Seleccionar el proveedor. 4. Agregar producto con cantidad y precio unitario. 5. (Opcional) adjuntar imagen/PDF menor a 4 MB. 6. Clic en \"Registrar compra\"",
+    "requisitos": "Usuario con permiso compras/crear; al menos un proveedor y productos",
+    "datos": "Usuario alex/alex123 (Gerente, sucursal \"Ferromax chichi\"); proveedor de prueba \"Proveedor E2E CP\" (creado por la suite en #/catalogos); producto \"llave inlgesa\" (SKU LLAVE); cantidad 1, precio unitario Q10.00; sin adjunto",
+    "esperado": "Se agrega la línea con total \"Total: Q10.00\"; toast \"Compra registrada\" (\"Guardada en el dispositivo y en cola de sincronización\"); aparece en el listado con badge \"sin sincronizar\" hasta que sincronice",
+    "real": "modal \"Nueva compra\" → Proveedor E2E CP + 1 × llave inlgesa → \"Total: Q10.00\" → toast \"Compra registrada Guardada en el dispositivo y en cola de sincronización\" → fila con badges \"completada\" y \"sin sincronizar\"; IndexedDB: 0 → 1 compras, la nueva PENDING (id 8877e5f4-357a-4cb1-be98-864106ebd37a, total 1000 centavos)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-001.png"
+  },
+  {
+    "id": "CP-COMP-002",
+    "escenario": "Registrar una entrada manual de mercadería",
+    "pasos": "1. Ir a la pestaña \"Entradas\". 2. Clic en \"Nueva entrada\". 3. Elegir producto. 4. Revisar la alerta \"Stock actual: X → quedará Y\". 5. Ingresar cantidad y motivo. 6. Clic en \"Registrar entrada\"",
+    "requisitos": "Usuario con permiso compras/crear; producto seleccionable",
+    "datos": "Producto \"llave inlgesa\" (stock local al entrar al caso = stock inicial + 1 de CP-COMP-001); cantidad 5; motivo \"Entrada E2E CP\"",
+    "esperado": "Toast \"Entrada registrada\"; el stock del producto sube al instante; la fila aparece en el listado de entradas",
+    "real": "alerta \"Stock actual: 4 → quedará 9\" (coincide con IndexedDB) → 5 × llave inlgesa, motivo \"Entrada E2E CP\" → toast \"Entrada registrada Stock actualizado en el dispositivo (cola PENDING)\" → stock local 4 → 9 · fila \"+5\" con badge \"sin sincronizar\" · entradas locales 0 → 1 · 1 evento PENDING",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-002.png"
+  },
+  {
+    "id": "CP-COMP-003",
+    "escenario": "Validaciones del formulario de compra",
+    "pasos": "1. Clic en \"Registrar compra\" sin proveedor. 2. Seleccionar proveedor pero sin productos. 3. Ingresar cantidad 0. 4. Ingresar precio vacío/inválido. 5. Cerrar el modal sin guardar",
+    "requisitos": "Modal \"Nueva compra\" abierto y proveedor disponible en el catálogo",
+    "datos": "Proveedor \"Proveedor E2E CP\"; producto \"llave inlgesa\"; cantidad 0; precio vacío; ninguna línea se agrega",
+    "esperado": "Toasts warning: \"Falta el proveedor\", \"Sin productos\", \"Cantidad inválida\" / \"Usa un entero mayor a cero\", \"Precio inválido\"; no se guarda nada",
+    "real": "4 validaciones con su toast (Falta el proveedor / Sin productos / Cantidad inválida + \"Usa un entero mayor a cero\" / Precio inválido) · el modal siguió \"Sin líneas\" · Cancelar cerró el modal · IndexedDB sin compras nuevas (1 → 1)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-003.png"
+  },
+  {
+    "id": "CP-COMP-004",
+    "escenario": "Adjunto mayor a 4 MB",
+    "pasos": "1. Abrir el modal \"Nueva compra\". 2. Seleccionar un archivo de ~5 MB en \"Adjunto opcional (imagen o PDF, máx. 4 MB)\". 3. Revisar el toast y el estado del adjunto. 4. Cerrar el modal",
+    "requisitos": "Modal \"Nueva compra\" abierto; archivo temporal de ~5 MB generado por la suite",
+    "datos": "Archivo AdjuntoGrande_CP.pdf en el temporal del sistema (5 MB, Buffer.alloc); se borra en el finally",
+    "esperado": "Toast \"Adjunto muy grande\" / \"El archivo no puede superar 4 MB\"; el archivo no se adjunta (no aparece su nombre en el modal)",
+    "real": "archivo de 5 MB en el input → toast \"Adjunto muy grande El archivo no puede superar 4 MB\" → el modal no muestra el archivo (se rechazó) · sin compras nuevas",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-004.png"
+  },
+  {
+    "id": "CP-COMP-005",
+    "escenario": "Anulación de compra con devolución de stock",
+    "pasos": "1. Sincronizar la compra de CP-COMP-001 (el motor de sync está detenido: se usa sincronizarEvento). 2. Ir a #/compras. 3. Clic en anular de la compra completada. 4. Revisar el modal \"Anular compra\". 5. Escribir motivo. 6. Clic en \"Anular compra\"",
+    "requisitos": "Usuario con permiso compras/eliminar, red disponible, compra de CP-COMP-001 ya sincronizada (SYNCED)",
+    "datos": "Compra de CP-COMP-001 (folio anotado en el caso); motivo de anulación \"Anulación E2E CP\"",
+    "esperado": "Confirmación \"¿Anular la compra XXXXXXXX por Q…? El stock se devolverá a la sucursal.\"; toast \"Compra anulada\" / \"El stock fue devuelto a la sucursal\"; estado en anulada; el stock del servidor vuelve al inicial",
+    "real": "sincronización manual del evento PENDING → SYNCED (folio 4EACE331, id remapeado por el servidor) · stock servidor 3 → 4 → 3 · modal con \"¿Anular la compra 4EACE331 por Q10.00? El stock se devolverá a la sucursal.\" · motivo \"Anulación E2E CP\" → toast \"Compra anulada El stock fue devuelto a la sucursal\" · fila en \"anulada\" y estado local anulada",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-005.png"
+  },
+  {
+    "id": "CP-COMP-006",
+    "escenario": "Registrar compra sin conexión",
+    "pasos": "1. Abrir #/compras con red. 2. Cortar la red. 3. Volver a entrar a #/compras (alerta offline). 4. Registrar una compra válida",
+    "requisitos": "Chunk lazy de #/compras ya cargado con red; catálogo y proveedor hidratados en IndexedDB",
+    "datos": "Proveedor \"Proveedor E2E CP\"; producto \"llave inlgesa\"; cantidad 1, precio unitario Q15.00; red cortada por CDP",
+    "esperado": "Toast \"Compra registrada\" / \"Sin conexión: guardada localmente (cola PENDING)\"; la fila muestra el badge \"sin sincronizar\"; alerta \"Sin conexión: estás viendo los registros locales. El alta de compras y entradas sigue permitida.\"",
+    "real": "navigator.onLine=false → alerta offline en #/compras → alta con Proveedor E2E CP + 1 × llave inlgesa a Q15.00 → \"Total: Q15.00\" → toast \"Compra registrada Sin conexión: guardada localmente (cola PENDING)\" → fila con badge \"sin sincronizar\" · 1 compra PENDING (id 93252d23-4f7f-4781-8154-1429edd427c3) · red aún cortada",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-006.png"
+  },
+  {
+    "id": "CP-COMP-007",
+    "escenario": "Intento de anular compra pendiente de sync",
+    "pasos": "1. Con la red aún cortada, clic en anular de la compra PENDING de CP-COMP-006. 2. Revisar el toast y que NO se abra el confirm. 3. Borrar la compra local + detalle + eventos de cola con script (red aún cortada). 4. Recargar el listado. 5. Restaurar la red",
+    "requisitos": "Compra local con sync_status PENDING (badge \"sin sincronizar\") y red cortada",
+    "datos": "Compra offline de CP-COMP-006 (id anotado en el caso); el script borra compras, detalle_compra y cola_sincronizacion",
+    "esperado": "El sistema bloquea la acción con toast \"Compra local sin sincronizar\" / \"Todavía no existe en el servidor…\"; la compra no cambia de estado y, tras la limpieza local, desaparece del listado sin dejar eventos PENDING",
+    "real": "sin red el botón no abre el confirm → toast \"Compra local sin sincronizar Todavía no existe en el servidor: la anulación estará disponible cuando se sincronice.\" · borrado local {\"detalle\":1,\"eventos\":1,\"existia\":true} · listado sin red quedó en 1 fila(s) · cola de compras PENDING = 0",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-007.png"
+  },
+  {
+    "id": "CP-COMP-008",
+    "escenario": "Filtros, pestañas y paginación",
+    "pasos": "1. Ir a #/compras. 2. Alternar pestañas \"Compras\" y \"Entradas\". 3. Buscar \"Buscar por proveedor o producto...\". 4. Filtrar por estado. 5. Recargar con el botón \"Recargar listado\"",
+    "requisitos": "Sucursal sin compras ni entradas registradas al inicio de la suite (verificado por REST: get_compras y get_entradas devuelven total 0)",
+    "datos": "Búsqueda sin coincidencias: \"zzz_sin_coincidencias_cp\"; estados: Todos los estados / Completadas / Anuladas",
+    "esperado": "Cada pestaña muestra sus columnas y su vacío propio (\"No hay compras registradas\" / \"No hay entradas registradas\"); filtros y paginación de 50 por página funcionan",
+    "real": "Compras → columnas Fecha, Proveedor, Usuario, Artículos, Total, Estado, Acciones · Entradas → la vista vacía no renderiza <table> (columnas verificadas en CP-COMP-002) · placeholder y filtro de estado correctos · búsqueda \"zzz_sin_coincidencias_cp\" → 0 filas · Todos los estados → 5 compras · Completadas → 0 compras · Anuladas → 5 compras · recarga con \"Recargar listado\" → 5 compras · la BD ya traía 5 compras / 0 entradas de corridas anteriores de esta misma suite (no hay API para borrar compras del servidor): se verificó la consistencia listado↔servidor en vez del estado vacío · sin paginación (total 5 < 50 por página)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-008.png"
+  },
+  {
+    "id": "CP-COMP-009",
+    "escenario": "Visualización del comprobante de compra",
+    "pasos": "1. Ir a #/compras. 2. Clic en el ícono de archivo de una compra. 3. Verificar \"Cerrar\", \"Ticket 80 mm\" y \"Carta\". 4. Clic en \"Cerrar\" (no se pulsa nada que dispare window.print nativo)",
+    "requisitos": "Compra existente en el listado (la de CP-COMP-001, sin adjunto)",
+    "datos": "Compra de CP-COMP-001 sin adjunto → ticket armado desde IndexedDB; \"Ticket 80 mm\" y \"Carta\" llaman a window.print() (diálogo nativo) y NO se pulsan en automation",
+    "esperado": "El modal muestra el adjunto local o el ticket con MarcaAguaComprobante; los botones \"Cerrar\", \"Ticket 80 mm\" y \"Carta\" funcionan (PDF: \"Abrir en pestaña\")",
+    "real": "folio 8877E5F4 · \"Comprobante de compra\" sin adjunto → \"No es factura fiscal\" + \"PENDIENTE DE SINCRONIZACIÓN FISCAL\" + \"Comprobante no fiscal\" · botones Cerrar / Ticket 80 mm / Carta habilitados (los de impresión no se pulsan: window.print() nativo)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-009.png"
+  },
+  {
+    "id": "CP-COMP-010",
+    "escenario": "Permisos de creación y visualización",
+    "pasos": "1. Con compras/crear=false en el rol Gerente: entrar a #/compras y revisar \"Nueva compra\" y \"Nueva entrada\". 2. Con compras/ver=false: intentar entrar a #/compras. 3. Verificar que los permisos quedaron restaurados",
+    "requisitos": "Red disponible (los permisos se re-consultan con red); permisoTemporal restaura el estado previo en su finally",
+    "datos": "Rol Gerente 3cf414b4-156f-40d2-a6a2-715ad8113283 con compras/crear=false y luego compras/ver=false (temporales)",
+    "esperado": "Sin crear: los botones quedan deshabilitados u ocultos. Sin ver: redirige a #/dashboard. Restaurados: el botón \"Nueva compra\" vuelve a habilitarse",
+    "real": "compras/crear=false → \"Nueva compra\" y \"Nueva entrada\" deshabilitados con el listado intacto (1 fila(s)) · compras/ver=false → desde #/dashboard redirigió a #/dashboard sin renderizar la vista · permisos restaurados: \"Nueva compra\" habilitado de nuevo (true)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-COMP-010.png"
+  }
+]

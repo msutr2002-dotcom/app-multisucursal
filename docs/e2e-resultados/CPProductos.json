@@ -1,0 +1,112 @@
+[
+  {
+    "id": "CP-PROD-001",
+    "escenario": "Crear un producto nuevo",
+    "pasos": "1. Ir a #/productos. 2. Clic en \"+ Producto\". 3. Completar \"Nombre *\" (único), SKU, precio compra e precio inicial Normal. 4. Clic en \"Crear Producto\"",
+    "requisitos": "Usuario con permiso productos/crear; empresa activa; red disponible; tipos de precio MAYOREO y NORMAL existentes",
+    "datos": "alex/alex123 (Gerente, Ferromax chichi); nombre \"Producto E2E CP\", SKU \"CP-E2E-001\", precio compra 50 (Q50.00), precio inicial Normal 100 (Q100.00), estado por defecto disponible",
+    "esperado": "Toast \"Producto creado\"; el producto aparece en la tabla con su precio (Q100.00), costo (Q50.00), margen y stock",
+    "real": "toast \"Éxito Producto creado\"; fila creada: producto \"Producto E2E CP · CP-E2E-001 · disponible\", Precio Q100.00, Costo Q50.00, Margen 50%, Stock 0",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-001.png"
+  },
+  {
+    "id": "CP-PROD-002",
+    "escenario": "Editar un producto existente",
+    "pasos": "1. Ir a #/productos. 2. Clic en \"Editar\" del producto creado. 3. Modificar descripción y estado (a agotado). 4. Clic en \"Guardar Cambios\". 5. Reabrir \"Editar\" para verificar la descripción persistida",
+    "requisitos": "Producto existente con permiso productos/editar",
+    "datos": "Producto \"Producto E2E CP\" (creado en CP-PROD-001); descripción → \"Editado por E2E CP-PROD-002\"; estado → agotado",
+    "esperado": "Toast \"Producto editado\"; los cambios se reflejan en la tabla (estado \"agotado\") y la descripción persiste al reabrir el modal",
+    "real": "toast \"Éxito Producto editado\"; estado en tabla \"agotado\"; descripción persiste al reabrir el modal (\"Editado por E2E CP-PROD-002\")",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-002.png"
+  },
+  {
+    "id": "CP-PROD-003",
+    "escenario": "Eliminar un producto con confirmación",
+    "pasos": "1. Ir a #/productos. 2. Clic en el ícono de papelera de la fila del producto. 3. Revisar \"Confirmar eliminación\". 4. Clic en \"Eliminar\"",
+    "requisitos": "Producto existente con permiso productos/eliminar",
+    "datos": "Producto \"Producto E2E CP\" en la tabla; ConfirmModal \"Confirmar eliminación\" con mensaje ¿Eliminar el producto \"Producto E2E CP\"? Esta acción no se puede deshacer.",
+    "esperado": "Mensaje de confirmación correcto; toast \"Producto eliminado\"; desaparece de la tabla y del servidor (verificación REST al finalizar la suite)",
+    "real": "ConfirmModal \"Confirmar eliminación\" con mensaje exacto; toast \"Éxito Producto eliminado\"; el producto desapareció de la tabla (visible=false) y del servidor (REST get_productos_admin: 0 coincidencias)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-003.png"
+  },
+  {
+    "id": "CP-PROD-004",
+    "escenario": "Crear producto sin nombre",
+    "pasos": "1. Ir a #/productos. 2. Clic en \"+ Producto\". 3. Dejar \"Nombre *\" vacío. 4. Clic en \"Crear Producto\"",
+    "requisitos": "Modal \"Nuevo Producto\" abierto",
+    "datos": "Modal \"Nuevo Producto\" con \"Nombre *\" vacío; botón \"Crear Producto\"",
+    "esperado": "El campo \"Nombre *\" es obligatorio (required nativo); el formulario no se envía, el modal permanece abierto y no se crea ningún producto",
+    "real": "al clickear \"Crear Producto\" con nombre vacío: el navegador bloqueó el envío (required nativo, checkValidity=false, validationMessage=\"Rellene este campo.\"), el modal permaneció abierto y no apareció toast de creación; el formulario no se envió",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-004.png"
+  },
+  {
+    "id": "CP-PROD-005",
+    "escenario": "Imagen inválida o mayor a 2 MB",
+    "pasos": "1. Abrir el modal de producto. 2. Adjuntar un .txt (no imagen). 3. Adjuntar un .png de 2.5 MB. 4. Cancelar el modal. 5. Borrar los temporales",
+    "requisitos": "Modal de producto abierto; input file \"Imagen\" con leyenda \"PNG o JPG, máximo 2 MB\"",
+    "datos": "Temporales: no-imagen.txt (texto plano) y grande.png (2.5 MB con firma PNG válida); límite MAX_BYTES = 2 MB",
+    "esperado": "Errores \"El archivo debe ser una imagen\" y \"La imagen no puede superar 2 MB\"; no se guarda el archivo; el modal se puede cancelar",
+    "real": "archivos: no-imagen.txt → toast \"Error El archivo debe ser una imagen\"; grande.png (2.5 MB, firma PNG) → toast \"Error La imagen no puede superar 2 MB\"; el input file quedó limpio (value=\"\"), el modal no guardó nada y se canceló; temporales borrados",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-005.png"
+  },
+  {
+    "id": "CP-PROD-006",
+    "escenario": "Gestión de precios por tipo y cantidad",
+    "pasos": "1. Clic en el precio verde de la fila (title \"Clic para editar precios\"). 2. En \"Precios — {nombre}\" agregar MAYOREO desde 5 a Q80.00. 3. Editar ese tier a Q75.00 (\"Actualizar\"). 4. Eliminar solo el tier MAYOREO creado (el tier NORMAL inicial se conserva)",
+    "requisitos": "Producto creado con precio inicial Normal (tier NORMAL desde 1); tipos de precio MAYOREO y NORMAL existentes",
+    "datos": "Producto \"Producto E2E CP\" con tier NORMAL Q100.00 (desde 1); tier MAYOREO temporal: desde 5, precio Q80.00 → se actualiza a Q75.00 → se elimina al final del caso",
+    "esperado": "Toasts \"Precio agregado\", \"Precio actualizado\" y \"Precio eliminado\"; la fila muestra el precio NORMAL sin alteraciones tras limpiar el tier creado",
+    "real": "toasts \"Éxito Precio agregado\" → \"Éxito Precio actualizado\" → \"Éxito Precio eliminado\"; tier MAYOREO agregado (desde 5, Q80.00), actualizado (Q75.00) y eliminado; solo queda el tier NORMAL inicial y la fila muestra Precio Q100.00",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-006.png"
+  },
+  {
+    "id": "CP-PROD-007",
+    "escenario": "Edición de stock por sucursal",
+    "pasos": "1. Clic en el número de Stock de la fila. 2. En \"Stock — {nombre}\" revisar columnas Sucursal/Stock/Mínimo. 3. Ajustar el Mínimo de la primera sucursal a 1. 4. Clic en \"Guardar Stock\"",
+    "requisitos": "Producto con stock en la sucursal actual y permiso productos/editar; red disponible (el modal escribe por RPC)",
+    "datos": "Producto \"Producto E2E CP\" con stock 0; se cambia Mínimo de la primera sucursal listada (Ferromax chichi) de 0 a 1; el cambio se anota y queda neutralizado con la baja del producto en CP-PROD-003",
+    "esperado": "Tabla por sucursal con columnas Sucursal, Stock y Mínimo; toast \"Stock guardado\"; el modal se cierra",
+    "real": "2 sucursal(es) listadas (Ferromax chichi: stock 0, mín 0 | Ferromax quiche: stock 0, mín 0); Mínimo de \"Ferromax chichi\" 0 → 1; toast \"Éxito Stock guardado\"; nota: el producto se elimina en CP-PROD-003, lo que retira sus filas de stock",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-007.png"
+  },
+  {
+    "id": "CP-PROD-008",
+    "escenario": "Filtros de búsqueda, estado y categoría",
+    "pasos": "1. Ir a #/productos. 2. Buscar \"llave\", luego \"CP-E2E\", luego basura (\"zzqqxx@@\"). 3. Filtrar por \"Disponible\" y por \"Agotado\". 4. Revisar el select de categorías",
+    "requisitos": "Productos con distintos estados (Producto E2E CP queda agotado tras CP-PROD-002); empresa sin categorías registradas",
+    "datos": "Términos válidos: \"llave\" (nombre) y \"CP-E2E\" (SKU del producto E2E); término sin coincidencias: \"zzqqxx@@\"; estados disponibles/agotado",
+    "esperado": "Cada filtro reduce la tabla; sin coincidencias se muestra \"No hay productos\"; el select de categorías solo ofrece \"Todas las categorías\" (catálogo vacío)",
+    "real": "busqueda \"llave\" → 1 fila; \"CP-E2E\" → 1 fila (\"Producto E2E CP\"); \"zzqqxx@@\" → 0 filas con \"No hay productos\"; limpiar → 3 filas; estado \"Disponible\" → 2 fila(s) sin el producto E2E; estado \"Agotado\" → 1 fila (solo el producto E2E); el select de categorías solo contiene \"Todas las categorías\" (empresa sin categorías registradas: \"Todas las categorías\"); no se pudo filtrar de verdad — registrado honestamente",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-008.png"
+  },
+  {
+    "id": "CP-PROD-009",
+    "escenario": "Ocultación del botón de creación sin permiso",
+    "pasos": "1. Con red, quitar productos/crear al rol Gerente (permiso temporal). 2. Navegar a #/dashboard y luego a #/productos (re-montaje fuerza la re-consulta). 3. Verificar que \"+ Producto\" desaparece y \"Editar\" sigue. 4. Verificar que al restaurar el permiso el botón regresa",
+    "requisitos": "Red disponible (permisoService re-consulta has_permission con red y cachea el resultado)",
+    "datos": "Rol Gerente 3cf414b4-156f-40d2-a6a2-715ad8113283 con productos/crear=false temporal; restaurado en el finally de permisoTemporal",
+    "esperado": "El botón \"+ Producto\" no está visible sin permiso crear; las acciones de edición siguen sus permisos; al restaurar, el botón vuelve",
+    "real": "con productos/crear=false: desde #/dashboard → #/productos con 0 botón(es) en el card-header (\"+ Producto\" oculto) y 3 botón(es) \"Editar\" visibles; al restaurar el permiso el botón regresó (1); permiso restaurado por permisoTemporal",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-009.png"
+  },
+  {
+    "id": "CP-PROD-010",
+    "escenario": "Productos sin conexión",
+    "pasos": "1. Abrir #/productos con red (calienta el chunk lazy). 2. Cortar la red por CDP. 3. Volver a entrar a #/productos. 4. Comparar con con red. 5. Restaurar la red",
+    "requisitos": "Catálogo hidratado en IndexedDB y chunk lazy de la ruta ya cargado con red (sin red un import dinámico frío revienta)",
+    "datos": "Red cortada con Network.emulateNetworkConditions offline=true; datos locales de Ferromax en IndexedDB",
+    "esperado": "Aparece la alerta \"Sin conexión. Productos desde almacenamiento local — solo lectura.\"; se listan los datos de IndexedDB sin bloquearse; al restaurar la red la alerta desaparece",
+    "real": "red cortada (navigator.onLine=false) → #/productos mostró la alerta offline y 2 fila(s) desde IndexedDB: [\"Fixture T9 Traslados Sin SKU · disponible — — — Q0.00 — 9 Editar\",\"llave inlgesa LLAVE · disponible — — Q40.00 Q32.00 20% 3 Editar\"]; el producto E2E creado por RPC posterior a la hidratación NO figura en el espejo local (esperado: NO, la hidratación ocurre en login); vista sin bloqueo",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-PROD-010.png"
+  }
+]

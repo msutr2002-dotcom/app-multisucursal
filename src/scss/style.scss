@@ -1,0 +1,572 @@
+@use '@coreui/coreui/scss/coreui' as * with (
+  $enable-deprecation-messages: false,
+  // Una sola tinta: acciones, dinero y estados positivos comparten el verde de marca.
+  $primary: #0d7a5f,
+  $primary-text-emphasis: #0a4b3a,
+  $primary-bg-subtle: #e6f4f0,
+  $primary-border-subtle: #b9dfd3,
+  $success: #0d7a5f,
+  $success-text-emphasis: #0a4b3a,
+  $success-bg-subtle: #e6f4f0,
+  $success-border-subtle: #b9dfd3
+);
+@use '@coreui/chartjs/scss/coreui-chartjs';
+@use 'vendors/simplebar';
+
+body {
+  background-color: var(--cui-tertiary-bg);
+}
+
+.wrapper {
+  width: 100%;
+  padding-inline: var(--cui-sidebar-occupy-start, 0) var(--cui-sidebar-occupy-end, 0);
+  will-change: auto;
+  @include transition(padding 0.15s);
+}
+
+.header > .container-fluid,
+.sidebar-header {
+  min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
+}
+
+.sidebar-brand-full {
+  margin-left: 3px;
+}
+
+.sidebar-header {
+  .nav-underline-border {
+    --cui-nav-underline-border-link-padding-x: 1rem;
+    --cui-nav-underline-border-gap: 0;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
+  }
+}
+
+.sidebar-toggler {
+  margin-inline-start: auto;
+}
+
+.sidebar-narrow,
+.sidebar-narrow-unfoldable:not(:hover) {
+  .sidebar-toggler {
+    margin-inline-end: auto;
+  }
+}
+
+.header > .container-fluid + .container-fluid {
+  min-height: 3rem;
+}
+
+.footer {
+  min-height: calc(3rem + 1px); // stylelint-disable-line function-disallowed-list
+}
+
+@include color-mode(dark) {
+  body {
+    background-color: var(--cui-dark-bg-subtle);
+  }
+
+  .footer {
+    --cui-footer-bg: var(--cui-body-bg);
+  }
+}
+
+/* ===== TEMA POS ===== */
+:root {
+  --pos-primary: #0d7a5f;
+  --pos-primary-dark: #0a4b3a;
+  --pos-primary-soft: #e6f4f0;
+
+  /* Tipografía: Archivo para la interfaz, Plex Mono solo para cifras */
+  --cui-font-sans-serif:
+    'Archivo Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans',
+    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --cui-font-monospace:
+    'IBM Plex Mono', ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono', monospace;
+  --cui-body-font-family: var(--cui-font-sans-serif);
+}
+
+/* ===== Cabecera del detalle de producto (POS) ===== */
+.pos-detalle-header {
+  background-color: var(--pos-primary-soft);
+  border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+}
+
+/* En modo oscuro la banda se oscurece: el texto (color del tema) debe seguir legible
+   sobre ella. No se toca --pos-primary-soft global para no afectar a TipoPagoToggle. */
+@include color-mode(dark) {
+  .pos-detalle-header {
+    background-color: #0f2c22;
+  }
+}
+
+body {
+  font-synthesis: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Cifras de dinero: siempre monoespaciadas, como un recibo */
+.monto {
+  font-family: var(--cui-font-monospace);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+}
+
+/* Sidebar: chrome en tinta profunda en vez del gris azulado de plantilla */
+.sidebar-dark {
+  --cui-body-bg: #14201b;
+  --cui-secondary-bg: #1e312a;
+  --cui-tertiary-bg: #18271f;
+  --cui-border-color: #274038;
+}
+
+/* Marca tipográfica del sidebar (monograma Q + nombre) */
+.sidebar-brand {
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background-color: var(--pos-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--cui-font-monospace);
+  font-weight: 600;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* Sidebar: item activo en teal */
+.sidebar {
+  --cui-sidebar-nav-link-active-bg: rgba(13, 122, 95, 0.18);
+  --cui-sidebar-nav-link-active-color: #39db9f;
+}
+
+/* ===== BOTTOM NAV (solo móvil <768px) ===== */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  background-color: var(--cui-body-bg);
+  border-top: 1px solid var(--cui-border-color);
+  z-index: 1030;
+  padding: 0.25rem 0 calc(0.25rem + env(safe-area-inset-bottom, 0));
+}
+
+.mobile-nav-item {
+  flex: 1;
+  /* min-width: 0 permite que el label se trunque en vez de desbordar cuando la
+     barra trae 6 destinos + FAB + «Más» (390 px → ~48 px por celda). */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.625rem;
+  text-decoration: none;
+  color: var(--cui-body-color);
+  padding: 0.25rem 0.125rem;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.mobile-nav-item small,
+.mobile-nav-fab small {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-nav-item.active {
+  color: var(--pos-primary);
+  font-weight: 600;
+}
+
+.mobile-nav-item.disabled {
+  opacity: 0.4;
+}
+
+/* Círculo POS al inicio (Variante B) */
+.mobile-nav-fab {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-decoration: none;
+  font-size: 0.625rem;
+  color: var(--cui-body-color);
+  min-height: 44px;
+  justify-content: center;
+}
+
+.mobile-nav-fab-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--pos-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(13, 122, 95, 0.4);
+  margin-top: -18px; /* sobresale un poco hacia arriba */
+}
+
+.mobile-nav-fab.active .mobile-nav-fab-circle {
+  background-color: var(--pos-primary-dark);
+}
+
+/* Ocultar bottom nav en desktop */
+@media (min-width: 768px) {
+  .mobile-nav {
+    display: none;
+  }
+}
+
+/* Espacio para que el contenido no quede tapado */
+@media (max-width: 767.98px) {
+  .wrapper {
+    padding-bottom: 4rem;
+  }
+
+  .footer {
+    display: none;
+  }
+}
+/* ===== Barra Cobrar (móvil) ===== */
+.cobrar-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(3.5rem + env(safe-area-inset-bottom, 0)); /* encima del bottom nav */
+  padding: 0.5rem 0.75rem;
+  background-color: var(--cui-body-bg);
+  z-index: 1029;
+}
+
+/* ===== Bottom sheet de cobro ===== */
+.modal-cobrar .modal-content {
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+}
+
+/* ===== LOGIN: panel de cuaderno con la Q del quetzal ===== */
+.login {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cui-body-bg);
+}
+
+.login-panel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.5rem 1.5rem 2rem;
+  color: #fff;
+  background-color: var(--pos-primary);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 35px,
+    rgba(255, 255, 255, 0.09) 35px 36px
+  );
+}
+
+.login-mark {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.login-tagline {
+  margin: 0.6rem 0 0;
+  max-width: 30ch;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.5;
+}
+
+.login-q {
+  position: absolute;
+  right: -0.06em;
+  bottom: -0.1em;
+  font-family: var(--cui-font-monospace);
+  font-weight: 500;
+  font-size: clamp(11rem, 30vw, 24rem);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  user-select: none;
+}
+
+.login-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 24rem;
+}
+
+@media (min-width: 768px) {
+  .login {
+    flex-direction: row;
+  }
+
+  .login-panel {
+    flex: 0 0 38%;
+    max-width: 30rem;
+    padding: 3rem;
+    justify-content: center;
+  }
+
+  .login-tagline {
+    margin-top: 1rem;
+  }
+}
+
+/* ===== Saludo: franja con el CTA del POS a la derecha ===== */
+.saludo-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.saludo-accion {
+  flex: 0 0 auto;
+}
+
+/* ===== Dashboard: héroe del día + renglones de libro de cuentas ===== */
+.stat-hero {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  color: #fff;
+  background-color: var(--pos-primary);
+}
+
+.stat-hero-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.stat-hero-value {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.stat-hero-link {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.stat-hero-link:hover,
+.stat-hero-link:focus-visible {
+  color: #fff;
+}
+
+.stat-cell {
+  height: 100%;
+  padding: 0.15rem 0 0.15rem 1rem;
+}
+
+.stat-value {
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.stat-label:hover,
+.stat-label:focus-visible {
+  color: var(--pos-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 767.98px) {
+  .stat-cell {
+    padding: 0.9rem 0 0;
+    border-top: 1px solid var(--cui-border-color);
+  }
+}
+
+@media (min-width: 768px) {
+  .stat-cell {
+    border-left: 1px solid var(--cui-border-color);
+  }
+}
+
+/* Movimiento: respetar la preferencia del sistema */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Comprobante: ancho en pantalla */
+.comprobante-ticket {
+  max-width: 320px;
+}
+
+/* Comprobante: imprimir solo el ticket (80 mm o carta) */
+/* En pantalla el gris "secondary" sigue el tema: en tema oscuro es claro y
+   quedaría invisible sobre el fondo blanco del ticket (ModalComprobante,
+   ModalComprobanteCompra y cotizaciones). Se fija aquí el gris de tema claro;
+   ganar por variable evita pelear con el `!important` de CoreUI. */
+.comprobante-ticket {
+  --cui-secondary-color: rgba(37, 42.92, 54.02, 0.681);
+  --cui-secondary-color-rgb: 37, 42.92, 54.02;
+}
+
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: hidden !important;
+  }
+  /* Todo lo que no esté dentro del ticket: sin layout.
+     Así la página de la app no genera hojas en blanco. */
+  body.imprimir-comprobante *:not(.comprobante-ticket):not(.comprobante-ticket *) {
+    display: none !important;
+  }
+  /* Ruta DOM hasta el ticket: sin cajas propias; el position:fixed
+     del ticket se ancla directo a la hoja. Debe ir después de la regla
+     anterior (misma especificidad, gana el orden). */
+  body.imprimir-comprobante .modal:has(.comprobante-ticket),
+  body.imprimir-comprobante .modal :has(.comprobante-ticket) {
+    display: contents !important;
+  }
+  body.imprimir-comprobante .comprobante-ticket {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 auto !important;
+    /* Rollo 80 mm: llena el ancho útil del papel (page area = 80mm - márgenes) */
+    width: 100%;
+    max-width: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  body.imprimir-comprobante .comprobante-ticket.comprobante-carta {
+    width: 170mm;
+    max-width: 100% !important;
+    top: 5mm;
+  }
+  /* Carta FEL: la tabla de ítems con 9 columnas SAT desborda el ancho útil
+     con table-layout auto (recortaba "Impuestos (IVA)"). Fixed + anchos en %
+     + celdas compactas la mantienen dentro de los 170 mm. Solo print: la
+     vista previa del modal conserva el look del ticket. */
+  .comprobante-carta .factura-carta-items {
+    table-layout: fixed;
+    width: 100%;
+    font-size: 0.72rem;
+    /* Encabezados SAT más pequeños: "DESCUENTOS"/"#NO" no parten a media palabra */
+    th {
+      font-size: 0.58rem;
+    }
+    td,
+    th {
+      padding: 3px 4px;
+      overflow-wrap: anywhere;
+    }
+    /* Los montos no parten a media cifra (Q1.78571\n4) */
+    td.monto {
+      white-space: nowrap;
+    }
+  }
+}
+
+/* Reportes: imprimir solo la hoja del reporte (RF-RI2).
+   El nodo vive en un portal fuera de #root, así que ocultar el shell es una
+   sola regla (a diferencia del comprobante, que navega el DOM del modal).
+   En pantalla el nodo solo existe durante el ciclo de impresión. */
+.reporte-impresion {
+  display: none;
+  color: #000;
+}
+
+@media print {
+  body.imprimir-reporte #root {
+    display: none !important;
+  }
+  /* Cualquier otro portal suelto en <body> (modales, toasts) también sale */
+  body.imprimir-reporte > *:not(#root):not(.reporte-impresion) {
+    display: none !important;
+  }
+  body.imprimir-reporte .reporte-impresion {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+}

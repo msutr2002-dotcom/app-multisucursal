@@ -1,0 +1,392 @@
+{
+  "generado": "2026-10-10T05:18:17.386Z",
+  "total": 64,
+  "ok": 64,
+  "reprobados": 0,
+  "checks": [
+    {
+      "fase": "fase1",
+      "nombre": "hidratación del catálogo local",
+      "ok": true,
+      "detalle": "{\"metodos\":2,\"productos\":2,\"stocks\":4}"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "chunk de pendienteService calentado",
+      "ok": true,
+      "detalle": "true"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "baseline IndexedDB",
+      "ok": true,
+      "detalle": "ventas=0 eventos=0 colaPENDING=0"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "stock de \"llave inlgesa\" legible",
+      "ok": true,
+      "detalle": "{\"deep\":3,\"flat\":3,\"id\":\"5fbaad28-a473-4fd0-9b64-50534a60f884\"}"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /dashboard",
+      "ok": true,
+      "detalle": "hash=#/dashboard len=356 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /usuarios",
+      "ok": true,
+      "detalle": "hash=#/dashboard len=356 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /Empresas",
+      "ok": true,
+      "detalle": "hash=#/dashboard len=356 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /sucursales",
+      "ok": true,
+      "detalle": "hash=#/dashboard len=356 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /roles",
+      "ok": true,
+      "detalle": "hash=#/dashboard len=356 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /admin-dashboard",
+      "ok": true,
+      "detalle": "hash=#/admin-dashboard len=301 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /productos",
+      "ok": true,
+      "detalle": "hash=#/productos len=369 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /ingredientes",
+      "ok": true,
+      "detalle": "hash=#/ingredientes len=204 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /pos",
+      "ok": true,
+      "detalle": "hash=#/pos len=477 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /catalogos",
+      "ok": true,
+      "detalle": "hash=#/catalogos len=220 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /historial",
+      "ok": true,
+      "detalle": "hash=#/historial len=1900 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /inventario",
+      "ok": true,
+      "detalle": "hash=#/inventario len=246 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /compras",
+      "ok": true,
+      "detalle": "hash=#/compras len=626 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /traslados",
+      "ok": true,
+      "detalle": "hash=#/traslados len=1191 spinner=false"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "calentar /reportes",
+      "ok": true,
+      "detalle": "hash=#/reportes len=1343 spinner=false"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "red cortada con CDP",
+      "ok": true,
+      "detalle": "navigator.onLine=false"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /dashboard",
+      "ok": true,
+      "detalle": "hash=#/dashboard (calor: #/dashboard) len=347 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /usuarios",
+      "ok": true,
+      "detalle": "hash=#/dashboard (calor: #/dashboard) len=347 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /Empresas",
+      "ok": true,
+      "detalle": "hash=#/dashboard (calor: #/dashboard) len=347 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /sucursales",
+      "ok": true,
+      "detalle": "hash=#/dashboard (calor: #/dashboard) len=347 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /roles",
+      "ok": true,
+      "detalle": "hash=#/dashboard (calor: #/dashboard) len=347 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /admin-dashboard",
+      "ok": true,
+      "detalle": "hash=#/admin-dashboard (calor: #/admin-dashboard) len=341 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /productos",
+      "ok": true,
+      "detalle": "hash=#/productos (calor: #/productos) len=435 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /ingredientes",
+      "ok": true,
+      "detalle": "hash=#/ingredientes (calor: #/ingredientes) len=250 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /pos",
+      "ok": true,
+      "detalle": "hash=#/pos (calor: #/pos) len=477 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /catalogos",
+      "ok": true,
+      "detalle": "hash=#/catalogos (calor: #/catalogos) len=276 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /historial",
+      "ok": true,
+      "detalle": "hash=#/historial (calor: #/historial) len=582 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /inventario",
+      "ok": true,
+      "detalle": "hash=#/inventario (calor: #/inventario) len=246 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /compras",
+      "ok": true,
+      "detalle": "hash=#/compras (calor: #/compras) len=321 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /traslados",
+      "ok": true,
+      "detalle": "hash=#/traslados (calor: #/traslados) len=1279 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "offline /reportes",
+      "ok": true,
+      "detalle": "hash=#/reportes (calor: #/reportes) len=288 errBoundary=false "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "carrito offline con producto local",
+      "ok": true,
+      "detalle": "{\"filas\":1,\"totalTexto\":\"Q40.00\"}"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "venta offline: toast de éxito",
+      "ok": true,
+      "detalle": "click→toast 299 ms"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "venta offline < 2 s (criterio RF)",
+      "ok": true,
+      "detalle": "299 ms"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "modal de resultado con Folio",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "fase": "fase2",
+      "nombre": "venta local con evento de cola PENDING",
+      "ok": true,
+      "detalle": "{\"colaPend\":1,\"estado\":\"completada\",\"id\":\"ce0d08ed-b061-4279-b9b5-d76427882a76\",\"sync\":\"PENDING\",\"total\":4000}"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "descuento de stock offline",
+      "ok": true,
+      "detalle": "3 → 2"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "carrito para pendiente offline",
+      "ok": true,
+      "detalle": "{\"filas\":1,\"totalTexto\":\"Q40.00\"}"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "pendiente offline guardado",
+      "ok": true,
+      "detalle": "Éxito Venta registrada correctamente | Pendiente guardado Venta guardada (Q40.00"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "carrito para cotización offline",
+      "ok": true,
+      "detalle": "{\"filas\":1,\"totalTexto\":\"Q40.00\"}"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "cotización offline guardada",
+      "ok": true,
+      "detalle": "Cotización guardada Borrador local — comprobante pendiente de red"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "consola sin errores JS de la app",
+      "ok": true,
+      "detalle": "errores capturados=0 reales=0 "
+    },
+    {
+      "fase": "fase2",
+      "nombre": "limpieza offline de pendiente/cotización (antes de reconectar)",
+      "ok": true,
+      "detalle": "{\"pendientesBorrados\":[\"251cb62d\"],\"pendientesRestantes\":0,\"quotesBorrados\":1}"
+    },
+    {
+      "fase": "fase3",
+      "nombre": "red restaurada",
+      "ok": true,
+      "detalle": "navigator.onLine=true"
+    },
+    {
+      "fase": "fase3",
+      "nombre": "cola de sincronización drenada (venta offline → SYNCED)",
+      "ok": true,
+      "detalle": "{\"colaPend\":0,\"id\":\"69a324ae-5d84-447c-847d-f8229428640a\",\"sync\":\"SYNCED\",\"ultimo_error\":null}"
+    },
+    {
+      "fase": "fase3",
+      "nombre": "venta offline en Supabase (get_ventas_historial)",
+      "ok": true,
+      "detalle": "fila 69a324ae folio=-"
+    },
+    {
+      "fase": "fase3",
+      "nombre": "banner offline de Historial desaparece al reconectar",
+      "ok": true,
+      "detalle": "NotificacionesSin notificaciones pendientesSincronizado Light Dark AutoASAlex SimajCerrar sesiónInic"
+    },
+    {
+      "fase": "fase3",
+      "nombre": "banner solo-lectura de Catálogos desaparece al reconectar",
+      "ok": true,
+      "detalle": "NotificacionesSin notificaciones pendientesSincronizado Light Dark AutoASAlex SimajCerrar sesiónInic"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "calentar system /usuarios",
+      "ok": true,
+      "detalle": "hash=#/usuarios len=769 spinner=false"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "calentar system /Empresas",
+      "ok": true,
+      "detalle": "hash=#/Empresas len=256 spinner=false"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "calentar system /sucursales",
+      "ok": true,
+      "detalle": "hash=#/sucursales len=415 spinner=false"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "calentar system /roles",
+      "ok": true,
+      "detalle": "hash=#/roles len=1251 spinner=false"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "calentar system /admin-dashboard",
+      "ok": true,
+      "detalle": "hash=#/admin-dashboard len=305 spinner=false"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "red cortada (admin)",
+      "ok": true,
+      "detalle": "navigator.onLine=false"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "offline admin /usuarios",
+      "ok": true,
+      "detalle": "hash=#/usuarios (calor: #/usuarios) len=305 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "offline admin /Empresas",
+      "ok": true,
+      "detalle": "hash=#/Empresas (calor: #/Empresas) len=283 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "offline admin /sucursales",
+      "ok": true,
+      "detalle": "hash=#/sucursales (calor: #/sucursales) len=308 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "offline admin /roles",
+      "ok": true,
+      "detalle": "hash=#/roles (calor: #/roles) len=292 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "offline admin /admin-dashboard",
+      "ok": true,
+      "detalle": "hash=#/admin-dashboard (calor: #/admin-dashboard) len=345 errBoundary=false banner presente"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "consola admin sin errores JS de la app",
+      "ok": true,
+      "detalle": "errores=0 reales=0 "
+    }
+  ]
+}

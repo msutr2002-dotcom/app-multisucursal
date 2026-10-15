@@ -1,0 +1,134 @@
+[
+  {
+    "id": "CP-POS-001",
+    "escenario": "Venta completa en efectivo (ruta ideal)",
+    "requisitos": "Sesión iniciada, producto con stock y precio en la sucursal, red disponible",
+    "pasos": "1. Ir a #/pos. 2. Buscar un producto y seleccionarlo. 3. Elegir cantidad y clic en \"Agregar\". 4. Verificar el carrito. 5. En el panel de pago elegir tipo de pago \"Efectivo\". 6. Clic en \"Realizar Venta\"",
+    "datos": "Usuario alex/alex123 (Gerente, Ferromax chichi); producto \"llave inlgesa\" (SKU LLAVE, precio NORMAL Q40.00); stock leído en tiempo de ejecución",
+    "esperado": "El carrito agrega el ítem; se muestra spinner \"Procesando...\"; aparece modal \"¡Venta realizada!\" con Folio y botones \"Nueva venta\"; toast \"Venta registrada correctamente\"; el stock baja",
+    "real": "carrito Q40.00 · spinner \"Procesando\" visto · toast \"Éxito Venta registrada correctamente\" · modal \"¡Venta realizada! Folio: 5F15B823 Total Q40.00 Nueva ventaImprimir comprobante\" · stock local 4 → 3 · stock anidado 4 → 4 (solo desciende productos_sucursal) · el modal se deja abierto a propósito (la captura lo muestra)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-001.png"
+  },
+  {
+    "id": "CP-POS-002",
+    "escenario": "Búsqueda de producto por nombre y por SKU",
+    "requisitos": "Al menos un producto existe en la sucursal",
+    "pasos": "1. Ir a #/pos. 2. Escribir parte del nombre en el buscador (\"Buscar por nombre, marca o código...\"). 3. Limpiar y escribir el SKU completo. 4. Presionar Enter",
+    "datos": "Término parcial \"llav\" (lista filtrada), SKU completo \"LLAVE\" con Enter (auto-selección) y término inexistente \"ZZQQ99NOEXISTE\"",
+    "esperado": "El listado se filtra tras el debounce; con SKU exacto único el producto se selecciona automáticamente; sin coincidencias muestra \"Sin resultados para \"x\"\"",
+    "real": "\"llav\" → dropdown con 1 fila(s) y sin auto-selección; \"LLAVE\"+Enter → detalle con SKU: LLAVE y 3 precios (Auto _ Q40.00 (según cantidad) | NORMAL _ Q40.00 | MAYOREO _ Q35.00 (mín. 10)); \"ZZQQ99NOEXISTE\" → Sin resultados para “ZZQQ99NOEXISTE”",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-002.png"
+  },
+  {
+    "id": "CP-POS-003",
+    "escenario": "Selección de precio por volumen",
+    "requisitos": "Producto con más de un tipo de precio configurado (ej: mínimo 5 unidades)",
+    "pasos": "1. Ir a #/pos. 2. Seleccionar el producto. 3. Revisar la sección \"Precio:\". 4. Cambiar la cantidad a un valor que alcanza el mínimo. 5. Agregar al carrito",
+    "datos": "\"llave inlgesa\" con NORMAL Q40.00 (mín. 1) y MAYOREO Q35.00 (mín. 10); el stock local se sube temporalmente a 12 para poder alcanzar el mínimo 10 y se restaura al final del caso",
+    "esperado": "Se muestra la opción \"Auto _ Qx (según cantidad)\" o \"TIPO _ Qx (mín. N)\"; al alcanzar el mínimo cambia al precio mayorista; el total se recalcula",
+    "real": "stock fijado a 12 · Auto \"Auto _ Q40.00 (según cantidad)\" → con cantidad 10 \"Auto _ Q35.00 (según cantidad)\" · total detalle Q350.00 · carrito 10 × Q35.00 = Q350.00 (MAYOREO) · fila \"llave inlgesa LLAVE · MAYOREO Q35.00 Q350.00\" · el stock se restaura en el finally de este caso",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-003.png"
+  },
+  {
+    "id": "CP-POS-004",
+    "escenario": "Vuelto con efectivo recibido mayor al total",
+    "requisitos": "Carrito con ítems y total a cobrar mayor a cero",
+    "pasos": "1. Armar un carrito. 2. Elegir \"Efectivo\". 3. Ingresar en \"Efectivo recibido\" un monto mayor al total. 4. Clic en \"Realizar Venta\"",
+    "datos": "Carrito con \"llave inlgesa\" x1 (Q40.00) y efectivo recibido Q100.00 (vuelto esperado Q60.00); el cobro NO se ejecuta en esta corrida (ver resultado)",
+    "esperado": "El resumen muestra el campo \"Vuelto\" con la diferencia; la venta se procesa correctamente",
+    "real": "carrito Q40.00 · recibido Q100.00 → \"Vuelto Q60.00\" · total \"Q40.00\" · botón habilitado · DESVIACIÓN: el cobro NO se ejecuta en esta corrida para no dejar una venta extra (la venta real la hace CP-POS-001)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-004.png"
+  },
+  {
+    "id": "CP-POS-005",
+    "escenario": "Efectivo recibido menor al total",
+    "requisitos": "Carrito con ítems",
+    "pasos": "1. Armar carrito. 2. Elegir \"Efectivo\". 3. Ingresar en \"Efectivo recibido\" un monto menor al total",
+    "datos": "Carrito con \"llave inlgesa\" x1 (Q40.00) y efectivo recibido Q10.00 (falta esperada Q30.00)",
+    "esperado": "El resumen muestra \"Falta\" con la diferencia; el botón \"Realizar Venta\" queda deshabilitado",
+    "real": "carrito 1 × Q40.00 = Q40.00 · Efectivo activo · recibido Q10.00 → \"Falta Q30.00\" · \"Realizar Venta\" deshabilitado",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-005.png"
+  },
+  {
+    "id": "CP-POS-006",
+    "escenario": "Intento de cobro con carrito vacío",
+    "requisitos": "Sesión iniciada, carrito sin ítems",
+    "pasos": "1. Ir a #/pos. 2. No agregar productos. 3. Intentar realizar la venta",
+    "datos": "Carrito vacío y sin producto seleccionado en el detalle",
+    "esperado": "El carrito muestra \"Carrito vacío\"; no se puede cobrar; se muestra el estado vacío \"Busca un producto para ver su detalle\"",
+    "real": "carrito vacío + estado vacío visible · \"Realizar Venta\" deshabilitado · \"Cotización\" deshabilitado · \"Vaciar\" deshabilitado · no se pudo cobrar",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-006.png"
+  },
+  {
+    "id": "CP-POS-007",
+    "escenario": "Cantidad mayor al stock disponible",
+    "requisitos": "Producto con stock limitado (ej: 3 unidades)",
+    "pasos": "1. Seleccionar un producto con stock 3. 2. Intentar ingresar cantidad 5 en el detalle. 3. Agregar al carrito y subir la cantidad con +",
+    "datos": "\"llave inlgesa\" con su stock real en la sucursal del dispositivo (leído en tiempo de ejecución)",
+    "esperado": "La cantidad se limita al stock; el input queda bloqueado al llegar a stock máximo; no se excede el inventario",
+    "real": "stock local 4 · badge \"Stock: 4\" · escribir 5 → \"4\" (limitado) · total detalle Q160.00 · Agregar → cantidad 4 · \"+\" pulsado 1 vez(es) hasta quedarse en 4 con \"+\" deshabilitado (max=4) · fila \"llave inlgesa LLAVE · NORMAL Q40.00 Q160.00\"",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-007.png"
+  },
+  {
+    "id": "CP-POS-008",
+    "escenario": "Producto sin stock en la sucursal",
+    "requisitos": "Producto con stock 0 en la sucursal del dispositivo",
+    "pasos": "1. Buscar un producto agotado en la sucursal. 2. Revisar el detalle",
+    "datos": "\"llave inlgesa\" con stock local fijado a 0 en IndexedDB (ambos stores) y restaurado al final del caso",
+    "esperado": "Se muestra \"Sin stock en tu sucursal — revisa disponibilidad en otras bodegas\" y el botón \"Agregar\" está deshabilitado",
+    "real": "stock fijado a 0 en ambos stores (antes {\"deep\":4,\"flat\":4,\"min\":0}) · badge \"Stock: 0\" · \"Sin stock en tu sucursal — revisa disponibilidad en otras bodegas\" · botón \"Agregar\" deshabilitado · la restauración queda para CP-POS-011 (para que la captura muestre el estado)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-008.png"
+  },
+  {
+    "id": "CP-POS-009",
+    "escenario": "Venta sin conexión (cola de sincronización)",
+    "requisitos": "Sesión iniciada, red caída, producto disponible localmente",
+    "pasos": "1. Cortar la red. 2. Ir a #/pos. 3. Armar carrito y realizar la venta en efectivo. 4. Revisar el modal resultado. 5. Clic en \"Imprimir comprobante sin conexión\"",
+    "datos": "Red cortada con Network.emulateNetworkConditions offline=true; \"llave inlgesa\" x1; baseline de IndexedDB capturado antes del caso",
+    "esperado": "Venta registrada localmente con toast \"Venta registrada correctamente\"; modal \"¡Venta realizada!\" con Folio; el comprobante impreso lleva marca de agua \"PENDIENTE DE SINCRONIZACIÓN FISCAL\"; la venta queda PENDING",
+    "real": "red cortada (navigator.onLine=false) · venta local 7c064235 sync=PENDING (intentos=1, cola PENDING=1) · toast y modal con Folio (¡Venta realizada! Folio: 7C064235 Total ) · botón \"Imprimir comprobante sin conexión\" → comprobante con marca de agua \"PENDIENTE DE SINCRONIZACIÓN FISCAL\" + \"Comprobante no fiscal\" + \"No es factura fiscal\" · aviso offline en el panel \"Cotización\": sí · stock 2 → 1 · sin pulsar Ticket/Carta (window.print) · comprobante y modal quedan abiertos para la captura",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-009.png"
+  },
+  {
+    "id": "CP-POS-010",
+    "escenario": "Guardar cotización sin conexión",
+    "requisitos": "Red caída y carrito con ítems",
+    "pasos": "1. Cortar la red. 2. Armar carrito. 3. Clic en \"Cotización\". 4. Abrir \"Ver cotizaciones\"",
+    "datos": "Red cortada con CDP; \"llave inlgesa\" x1; borrador local nuevo en db.offline_quotes (baseline antes del caso)",
+    "esperado": "Modal \"¡Cotización guardada localmente!\" con aviso de comprobante sin red; toast \"Cotización guardada\"; la cotización aparece en el listado local",
+    "real": "red cortada (navigator.onLine=false) · toast \"Cotización guardada\" · modal \"¡Cotización guardada localmente! Folio: 1B330552 Total Q40.00 Cotizaci\" · borrador offline_quote {\"id\":\"1b330552\",\"items\":1,\"receipt\":\"pending_network\",\"status\":\"pending_sync\",\"total\":4000} · listado \"Ver cotizaciones\" → Cotizaciones Folio 1B330552 borrador 08-oct, 09:34 p. m. · 1 artículo 1× llave inlgesa Q40.00 · el modal queda abierto para la captura",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-010.png"
+  },
+  {
+    "id": "CP-POS-011",
+    "escenario": "Vaciar carrito con confirmación",
+    "requisitos": "Carrito con ítems",
+    "pasos": "1. Armar carrito con 2 o más productos. 2. Clic en \"Vaciar\". 3. Confirmar el reemplazo",
+    "datos": "Cuenta de prueba con 2 productos, pero solo \"llave inlgesa\" tiene precios (\"Fixture T9 Traslados\" sin precios deja \"Agregar\" deshabilitado): solo 1 producto agregable",
+    "esperado": "Aparece confirmación \"Reemplazar carrito\"; al confirmar el carrito queda vacío (\"Carrito vacío\") y al cancelar conserva los ítems",
+    "real": "\"Vaciar\" vació el carrito de inmediato sin mostrar la confirmación \"Reemplazar carrito\" (ni opción de cancelar). Diagnóstico: carrito vacío=true · segundo producto agregable=false (\"Fixture T9 Traslados\" sin precios → \"Agregar\" deshabilitado) · la única ruta con esa confirmación es cargar un pendiente sobre un carrito con ítems (ver CP-POS-012)",
+    "estado": "Reprobado",
+    "captura": "docs/capturas/CP-POS-011.png"
+  },
+  {
+    "id": "CP-POS-012",
+    "escenario": "Recuperar una venta pendiente",
+    "requisitos": "Existe al menos una venta pendiente guardada en la sucursal",
+    "pasos": "1. Ir a #/pos. 2. Clic en \"Pendientes (n)\". 3. Seleccionar un pendiente. 4. Completar el cobro",
+    "datos": "Se crea un pendiente en el propio caso con \"llave inlgesa\" x1 y se recarga al carrito para cobrarlo (red disponible)",
+    "esperado": "Se lista \"No hay ventas pendientes en esta sucursal.\" solo si no hay; si hay, el pendiente se carga en el carrito y la venta se completa con folio",
+    "real": "pendientes 0 → 1 (guardar) → 1 (cobrar, informativo) · modal \"Ventas pendientes\" lista Q40.00 · confirmación \"Reemplazar carrito Hay artículos en el carrito actual. Se reemplazarán al cargar el pendie\" · toast \"Pendiente cargado\" · carrito 4000 centavos · cobro con Folio (¡Venta realizada! Folio: DDC7E061 Total ) · stock 3 → 2 · el modal de resultado queda abierto para la captura",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-POS-012.png"
+  }
+]

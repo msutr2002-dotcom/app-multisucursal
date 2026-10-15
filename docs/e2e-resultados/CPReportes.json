@@ -1,0 +1,90 @@
+[
+  {
+    "id": "CP-REP-001",
+    "escenario": "Resumen de ventas del día (preset por defecto)",
+    "pasos": "1. Iniciar sesión. 2. Ir a #/reportes. 3. Verificar que el preset \"Hoy\" esté activo y que \"Desde\"/\"Hasta\" sean hoy. 4. Revisar la card \"Resumen\" (Clientes atendidos, Unidades vendidas, Total cobrado). 5. Revisar los grupos por día y el pie del listado",
+    "requisitos": "Usuario con permiso reportes/ver; ventas registradas HOY en la sucursal del dispositivo (precondición del caso)",
+    "datos": "Usuario alex/alex123 (Gerente, sucursal \"Ferromax chichi\"); presets \"Hoy\", \"Este Mes\" y \"Este Año\"; rango por defecto Desde = Hasta = fecha local de hoy; tarjetas con data-testid resumen-clientes / resumen-unidades / resumen-total",
+    "esperado": "Preset \"Hoy\" activo (botón sólido, los otros dos en outline) con Desde = Hasta = hoy; tarjetas \"Clientes atendidos\", \"Unidades vendidas\" y \"Total cobrado\" (Q) con valores; ventas agrupadas por día con encabezado tipo \"Martes, 07 de octubre de 2026\"; pie \"N ventas en el período · detalle de productos visible en cada venta\"",
+    "real": "preset \"Hoy\" activo (otros en outline) con rango 2026-10-08..2026-10-08 · Clientes atendidos 5, Unidades vendidas 5, Total cobrado Q200.00 · 1 grupo(s) por día [Jueves, 08 de octubre de 2026] · 8 bloque(s) de venta · pie \"8 ventas en el período · detalle de productos visible en cada venta\"",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-REP-001.png"
+  },
+  {
+    "id": "CP-REP-002",
+    "escenario": "Cambio de preset de fecha",
+    "pasos": "1. Ir a #/reportes (preset \"Hoy\"). 2. Clic en \"Este Mes\". 3. Revisar rango, tarjetas y listado. 4. Clic en \"Este Año\". 5. Revisar rango, tarjetas y listado",
+    "requisitos": "Ventas registradas en el mes y en el año de la sucursal activa",
+    "datos": "Presets \"Hoy\" (desde=hasta=hoy), \"Este Mes\" (desde=primer día del mes, hasta=hoy) y \"Este Año\" (desde=01-01 del año, hasta=hoy)",
+    "esperado": "Cada preset actualiza los inputs \"Desde\"/\"Hasta\", deja su botón sólido (los demás en outline) y recalcula tarjetas y listado; el total del período crece al ampliar el rango (coincidencia Este Mes = Este Año solo si todas las ventas del año caen en el mes en curso)",
+    "real": "Hoy [2026-10-08..2026-10-08]: 5 clientes, 5 unidades, Q200.00, 8 bloque(s) → Este Mes [2026-10-01..2026-10-08]: 9 clientes, 9 unidades, Q350.00, 13 bloque(s) → Este Año [2026-01-01..2026-10-08]: 9 clientes, 9 unidades, Q350.00, 13 bloque(s). Rango y preset cambiaron en ambos pasos. Este Mes y Este Año coinciden porque todas las ventas del año caen en el mes en curso",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-REP-002.png"
+  },
+  {
+    "id": "CP-REP-003",
+    "escenario": "Rango de fechas manual",
+    "pasos": "1. Ir a #/reportes. 2. Clic en \"Este Mes\". 3. Editar el input \"Desde\" (data-testid input-desde) al primer día del mes anterior. 4. Editar el input \"Hasta\" (data-testid input-hasta) al último día del mes anterior. 5. Revisar el resaltado de los presets y el listado",
+    "requisitos": "Reporte abierto con un preset activo y ventas en el mes en curso",
+    "datos": "Rango manual: Desde = 01 del mes anterior y Hasta = último día de ese mes (mes anterior sin ventas); el preset activo debía ser \"Este Mes\"",
+    "esperado": "Al editar cualquier input el preset activo se desactiva (los tres botones quedan en outline) y el listado se refiltra por el rango elegido (de N ventas a \"No hay ventas en el período seleccionado\" con tarjetas en 0)",
+    "real": "preset \"Este Mes\" activo con 13 bloque(s) → editar \"Desde\" a 2026-09-01 desactiva los 3 presets (todos outline) y conserva 13 bloque(s) → editar \"Hasta\" a 2026-09-30 deja el rango 2026-09-01..2026-09-30 sin ventas: mensaje \"No hay ventas en el período seleccionado\", tarjetas 0/0/Q0.00, sin alertas (0 visibles)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-REP-003.png"
+  },
+  {
+    "id": "CP-REP-004",
+    "escenario": "Filtrado por usuario",
+    "pasos": "1. Ir a #/reportes y elegir el preset \"Este Mes\". 2. Revisar las opciones del select \"Usuario\". 3. Seleccionar el usuario disponible. 4. Verificar que solo se listen sus ventas. 5. Volver a \"Todos los usuarios (N)\"",
+    "requisitos": "Ventas en el período con el campo usuario resuelto (el select solo ofrece a quien vendió en el rango)",
+    "datos": "Select \"Usuario\" con la opción \"Todos los usuarios (N)\" y un elemento por vendedor del período (por defecto \"Alex Simaj\"); el listado completo se restaura con la opción vacía",
+    "esperado": "Con un usuario seleccionado solo se muestran sus bloques de venta; al elegir \"Todos los usuarios (N)\" vuelve el listado completo con el mismo número de bloques",
+    "real": "select \"Usuario\" con 2 opción(es) (Todos los usuarios (1)); filtrar por \"Alex Simaj\" → 13 de 13 bloque(s), todos con ese vendedor; volver a \"Todos los usuarios (1)\" → 13 bloque(s) con 9 cliente(s) y Q350.00 cobrados (listado completo restaurado)",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-REP-004.png"
+  },
+  {
+    "id": "CP-REP-005",
+    "escenario": "Detalle de productos por venta",
+    "pasos": "1. Ir a #/reportes y elegir \"Este Mes\". 2. Revisar el primer bloque de venta (data-testid venta-bloque): id, cliente, usuario, hora, \"N líneas\", total y badge de estado. 3. Revisar la tabla inferior de productos (data-testid venta-lineas / tabla-lineas). 4. Revisar el pie del listado",
+    "requisitos": "Ventas con detalle de líneas disponible en el período",
+    "datos": "Bloque de venta con data-testid venta-bloque y venta-cliente; tabla con columnas \"Cantidad × Producto\", \"Precio\", \"Tipo de precio\" y \"Subtotal\"; pie con data-testid pie-reportes",
+    "esperado": "Cada venta muestra cliente, usuario, hora, \"N líneas\", total en Q y badge de estado (completada/anulada/pendiente); la tabla lista las 4 columnas con al menos una línea de producto; el pie indica \"N ventas en el período · detalle de productos visible en cada venta\"",
+    "real": "bloque 437D2AAC → cliente \"—\", usuario \"Alex Simaj\", hora 08:45 p. m., 1 línea, total Q40.00, badge \"pendiente\" · tabla con columnas [Cantidad × Producto, Precio, Tipo de precio, Subtotal] y 1 línea(s) de producto (fila: [\"1 × llave inlgesa LLAVE\",\"Q40.00\",\"—\",\"Q40.00\"]) · 13 tabla(s) en pantalla · pie \"13 ventas en el período · detalle de productos visible en cada venta\"",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-REP-005.png"
+  },
+  {
+    "id": "CP-REP-006",
+    "escenario": "Período sin ventas",
+    "pasos": "1. Ir a #/reportes. 2. Editar \"Desde\" a 2020-01-01. 3. Editar \"Hasta\" a 2020-01-31. 4. Revisar tarjetas, listado y alertas",
+    "requisitos": "Ninguno (rango histórico sin actividad)",
+    "datos": "Rango manual 2020-01-01 .. 2020-01-31; los tres presets quedan desactivados",
+    "esperado": "Tarjetas en 0 (0 clientes, 0 unidades, Q0.00) con el mensaje \"No hay ventas en el período seleccionado\", sin alertas de error y sin excepciones en consola",
+    "real": "rango 2020-01-01..2020-01-31 con los 3 presets en outline → \"No hay ventas en el período seleccionado\", tarjetas Clientes 0 / Unidades 0 / Total Q0.00, 0 bloques y 0 grupos, sin alertas de error",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-REP-006.png"
+  },
+  {
+    "id": "CP-REP-007",
+    "escenario": "Reportes sin conexión",
+    "pasos": "1. Abrir #/reportes con red (calienta el chunk lazy). 2. Cortar la red por CDP. 3. Volver a entrar a #/reportes. 4. Revisar la alerta, el listado local y que la vista no quede en blanco. 5. Restaurar la red",
+    "requisitos": "Ruta #/reportes ya cargada con red (regla del repo: sin red un import dinámico frío revienta); IndexedDB de la sucursal disponible",
+    "datos": "Red cortada con Network.emulateNetworkConditions offline=true (navigator.onLine=false); se restaura en el finally de este caso",
+    "esperado": "La vista renderiza en #/reportes sin quedar en blanco ni quedarse en spinner; se informa el origen de los datos (locales) y, si procede, la alerta \"Sin respuesta del servidor, se muestran solo las ventas locales: ...\" junto con el aviso de folio sin red en el detalle",
+    "real": "navigator.onLine=false con #/reportes ya abierto con red → re-navegar renderizó #/reportes con título \"Reportes de Ventas\" y card \"Resumen\" (0 clientes, 0 unidades, Q0.00) · \"No hay ventas en el período seleccionado\" (el espejo local no tiene ventas para el rango) · sin alerta \"Sin respuesta del servidor…\" (ReportesPage solo llama al RPC cuando useEstadoRed=true; con navigator.onLine=false se salta el servidor y no hay error que reportar) · 0 alerta(s) en pantalla ([]) · la vista no quedó en blanco ni en spinner; con red el período mostraba 8 bloque(s) y Q200.00",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-REP-007.png"
+  },
+  {
+    "id": "CP-REP-008",
+    "escenario": "Acceso sin permiso de ver",
+    "pasos": "1. Con red, quitar reportes/ver al rol Gerente (permiso temporal). 2. Ir a #/dashboard. 3. Intentar entrar a #/reportes. 4. Verificar la URL final y que la vista no se renderice (el permiso se restaura solo)",
+    "requisitos": "Red disponible (permisoService re-consulta has_permission con red y cachea el resultado); existe el permiso reportes del rol Gerente",
+    "datos": "Rol Gerente 3cf414b4-156f-40d2-a6a2-715ad8113283 con reportes/ver=false temporal; restaurado en el finally de permisoTemporal",
+    "esperado": "Tras validar el permiso el sistema redirige a #/dashboard sin renderizar \"Reportes de Ventas\"",
+    "real": "desde #/dashboard → intento de #/reportes con reportes/ver=false redirigió a #/dashboard sin renderizar \"Reportes de Ventas\"; permiso restaurado por permisoTemporal (original {\"ver\":true,\"crear\":true,\"editar\":true,\"eliminar\":true})",
+    "estado": "Aprobado",
+    "captura": "docs/capturas/CP-REP-008.png"
+  }
+]

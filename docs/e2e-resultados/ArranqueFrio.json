@@ -1,0 +1,76 @@
+{
+  "caso": "Arranque frío offline (Service Worker)",
+  "fecha": "2026-10-10T06:56:15.805Z",
+  "base": "http://localhost:4173",
+  "resultado": "TODOS OK",
+  "total": 11,
+  "ok": 11,
+  "checks": [
+    {
+      "fase": "fase1",
+      "nombre": "SW instalado y activado",
+      "ok": true,
+      "detalle": "estado=activated"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "SW controla la página (claim)",
+      "ok": true,
+      "detalle": "controller=true"
+    },
+    {
+      "fase": "fase1",
+      "nombre": "precache del shell poblada (>=100 recursos)",
+      "ok": true,
+      "detalle": "cache=pos-shell-1791615352310 total=113"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "red cortada con CDP",
+      "ok": true,
+      "detalle": "navigator.onLine=false"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "APP ARRANCA OFFLINE (UI renderizada tras reload)",
+      "ok": true,
+      "detalle": "hijos=1 len=509 hash=#/dashboard \"Q\nPunto de Venta\nDashboard\nPunto de Venta\nInventario\nHistorial\nCompras\nTraslados\""
+    },
+    {
+      "fase": "fase2",
+      "nombre": "sin ErrorBoundary (no hay pantalla blanca)",
+      "ok": true,
+      "detalle": "errBoundary=false"
+    },
+    {
+      "fase": "fase2",
+      "nombre": "chunk lazy offline (hash → Historial)",
+      "ok": true,
+      "detalle": "hijos=1 len=656"
+    },
+    {
+      "fase": "fase3",
+      "nombre": "red restaurada",
+      "ok": true,
+      "detalle": "navigator.onLine=true"
+    },
+    {
+      "fase": "fase3",
+      "nombre": "con red la app recarga normal",
+      "ok": true,
+      "detalle": "hijos=1 len=183"
+    },
+    {
+      "fase": "fase3",
+      "nombre": "consola de la app sin errores JS reales",
+      "ok": true,
+      "detalle": "[]"
+    },
+    {
+      "fase": "fase4",
+      "nombre": "dev (:3000) sin service worker registrado",
+      "ok": true,
+      "detalle": "registraciones=0"
+    }
+  ]
+}

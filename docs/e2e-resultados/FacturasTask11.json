@@ -1,0 +1,211 @@
+{
+  "modulo": "facturas-sat",
+  "tarea": "Task 11 (enmienda FEL)",
+  "fecha": "2026-10-13T22:49:36.572Z",
+  "sufix": "24893",
+  "folioPadron": "A-0000029",
+  "folioCf": "A-0000030",
+  "resultados": [
+    {
+      "n": "nav muestra \"Facturación\" para Admin",
+      "ok": true
+    },
+    {
+      "n": "cliente de padrón listo (12345678-0)",
+      "ok": true
+    },
+    {
+      "n": "alta de cliente con NIT no registrado (924893-9)",
+      "ok": true
+    },
+    {
+      "n": "venta enlazada al NIT de padrón registrada",
+      "ok": true
+    },
+    {
+      "n": "atajo dice \"Emitir factura\" (con NIT) y está habilitado",
+      "ok": true
+    },
+    {
+      "n": "certificación con NIT de padrón → folio A-0000029",
+      "ok": true
+    },
+    {
+      "n": "folio fiscal SAT: SAT-FEL-955-968319",
+      "ok": true
+    },
+    {
+      "n": "sin leyenda \"PENDIENTE DE SINCRONIZACIÓN FISCAL\" (D4)",
+      "ok": true
+    },
+    {
+      "n": "sin texto \"SIMULACIÓN\" (D4)",
+      "ok": true
+    },
+    {
+      "n": "NIT del padrón en la factura",
+      "ok": true
+    },
+    {
+      "n": "UUID DTE visible en la factura",
+      "ok": true
+    },
+    {
+      "n": "factura-subtotal visible (Q1.79)",
+      "ok": true
+    },
+    {
+      "n": "factura-iva visible (Q0.21)",
+      "ok": true
+    },
+    {
+      "n": "factura-total visible (Q2.00)",
+      "ok": true
+    },
+    {
+      "n": "@page 80mm auto en impresión de ticket",
+      "ok": true
+    },
+    {
+      "n": "@page letter + clase .comprobante-carta en impresión carta",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: tabla de ítems con columnas SAT renderizada",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: encabezados SAT presentes en la tabla",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: pie \"Contribuyendo juntos por Guatemala\"",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: bloque \"Datos del certificador\" con SAT NIT 16693949",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: Moneda GTQ en encabezado",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: nota ISR presente",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: bloque \"Datos del comprador\"",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: UUID del DTE en encabezado",
+      "ok": true
+    },
+    {
+      "n": "carta FEL: QR del DTE generado (data-URL)",
+      "ok": true
+    },
+    {
+      "n": "venta enlazada al NIT no registrado registrada",
+      "ok": true
+    },
+    {
+      "n": "NIT no registrado bloqueado con mensaje del padrón",
+      "ok": true
+    },
+    {
+      "n": "venta casual (sin cliente) registrada",
+      "ok": true
+    },
+    {
+      "n": "atajo dice \"Facturar a CF\" (sin NIT)",
+      "ok": true
+    },
+    {
+      "n": "CF certificado → folio A-0000030",
+      "ok": true
+    },
+    {
+      "n": "CF: receptor \"CONSUMIDOR FINAL\" en la factura",
+      "ok": true
+    },
+    {
+      "n": "módulo Facturación lista facturas del servidor",
+      "ok": true
+    },
+    {
+      "n": "columna \"Folio fiscal SAT\" en la tabla",
+      "ok": true
+    },
+    {
+      "n": "badge de estado CERTIFICADO en la tabla",
+      "ok": true
+    },
+    {
+      "n": "ver factura desde el módulo muestra el mismo folio",
+      "ok": true
+    },
+    {
+      "n": "reimpresión sin marca de agua",
+      "ok": true
+    },
+    {
+      "n": "botón Anular habilitado (online)",
+      "ok": true
+    },
+    {
+      "n": "anulación: toast \"Factura anulada\"",
+      "ok": true
+    },
+    {
+      "n": "badge ANULADO tras anulación",
+      "ok": true
+    },
+    {
+      "n": "servidor: get_facturas incluye la factura certificada para el NIT",
+      "ok": true
+    },
+    {
+      "n": "servidor: get_factura → folio, NIT y estado_fel ANULADO",
+      "ok": true
+    },
+    {
+      "n": "fila intacta tras anulación: folio interno conservado, estado ANULADO (lista para re-emisión D13)",
+      "ok": true
+    },
+    {
+      "n": "servidor: factura CF listada con receptor CONSUMIDOR FINAL",
+      "ok": true
+    },
+    {
+      "n": "totales FEL consistentes (subtotal 179 + IVA 21 = total 200 = venta)",
+      "ok": true
+    },
+    {
+      "n": "offline: aviso \"viendo las facturas guardadas en este equipo\"",
+      "ok": true
+    },
+    {
+      "n": "offline: la factura CF sigue en el listado (espejo local)",
+      "ok": true
+    },
+    {
+      "n": "offline: reimpresión desde el espejo local con folio",
+      "ok": true
+    },
+    {
+      "n": "limpieza: cliente 12345678-0 desactivado (RPC)",
+      "ok": true
+    },
+    {
+      "n": "limpieza: cliente 924893-9 desactivado",
+      "ok": true
+    },
+    {
+      "n": "consola sin errores SEVERE de la app",
+      "ok": true
+    }
+  ],
+  "fallos": 0
+}
