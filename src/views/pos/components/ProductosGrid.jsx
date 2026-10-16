@@ -83,20 +83,22 @@ const ProductosGrid = ({ productos, stockPorProducto, onAgregar }) => {
                 <div className="pos-imagen">
                   <ImagenProducto src={p.imagen} alt={p.name} size={64} radius={10} />
                 </div>
-                <span
-                  className="fw-semibold text-truncate"
-                  style={{ fontSize: '0.8rem', lineHeight: 1.15, maxWidth: '120px' }}
-                >
-                  {p.name}
-                </span>
-                <span className="text-primary fw-bold" style={{ fontSize: '0.875rem' }}>
-                  {formatQ(precioTile(p))}
-                </span>
-                {p.contiene_insumos ? (
-                  <CBadge color="info" className="mt-1">
-                    Combo
-                  </CBadge>
-                ) : null}
+                <div className="pos-texto" style={{ flexGrow: 1, minWidth: 0 }}>
+                  <span
+                    className="fw-semibold text-truncate d-block"
+                    style={{ fontSize: '0.8rem', lineHeight: 1.15 }}
+                  >
+                    {p.name}
+                  </span>
+                  <span className="text-primary fw-bold d-block" style={{ fontSize: '0.875rem' }}>
+                    {formatQ(precioTile(p))}
+                  </span>
+                  {p.contiene_insumos ? (
+                    <CBadge color="info" className="mt-1">
+                      Combo
+                    </CBadge>
+                  ) : null}
+                </div>
               </button>
             )
           })}

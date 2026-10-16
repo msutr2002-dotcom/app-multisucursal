@@ -331,6 +331,17 @@ h6,
   justify-content: center;
 }
 
+/* Bloque de texto del tile: ocupa el ancho del card para permitir truncado real */
+.pos-texto {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pos-texto > span {
+  max-width: 100%;
+}
+
 /* En móvil: 2 columnas y tiles estilo Campero (imagen arriba, nombre abajo) */
 @media (max-width: 575.98px) {
   .pos-grid {
