@@ -9,6 +9,7 @@ import {
   CCardHeader,
   CButton,
   CFormInput,
+  CSpinner,
   CRow,
   CCol,
 } from '@coreui/react'
@@ -18,6 +19,7 @@ import ModalPermisos from './ModalPermisos'
 import { useToast } from '../../../components/common/ToastContext'
 import usePermission from '../../../hooks/usePermission'
 import useEstadoRed from '../../../hooks/useEstadoRed'
+import { ACCIONES } from './modulosPermisos'
 
 const Roles = () => {
   const puedeCrear = usePermission('roles', 'crear')
@@ -28,6 +30,8 @@ const Roles = () => {
   const showToast = useToast()
   const [busqueda, setBusqueda] = useState('')
   const [roles, setRoles] = useState([])
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState(null)
   const [modalRolVisible, setModalRolVisible] = useState(false)
   const [modalPermisosVisible, setModalPermisosVisible] = useState(false)
   const [rolSeleccionado, setRolSeleccionado] = useState(null)
@@ -40,13 +44,18 @@ const Roles = () => {
   const cargarDatos = () => {
     // Estilo .then (no async/await en callee): react-hooks/set-state-in-effect
     // (v7) flaggea setStates alcanzables desde el effect con await; .then pasa.
+    setCargando(true)
+    setError(null)
     supabase.rpc('get_roles_con_permisos').then(({ data, error }) => {
       if (error) {
+        setError(error.message)
         showToast('danger', 'Error', error.message)
         setRoles([])
+        setCargando(false)
         return
       }
       setRoles(data || [])
+      setCargando(false)
     })
   }
 
@@ -115,7 +124,10 @@ const Roles = () => {
   useEffect(() => {
     // Recarga al montar y cada vez que vuelve la red (offline-first).
     if (!enLinea) return
-    cargarDatos()
+    // diferido con setTimeout: react-hooks v7 prohíbe setState síncrono dentro
+    // del effect (cargarDatos ahora hace setCargando/setError)
+    const t = setTimeout(() => cargarDatos(), 0)
+    return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enLinea])
 
@@ -136,7 +148,7 @@ const Roles = () => {
             <CFormInput
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar..."
+              placeholder="Buscar rol..."
             />
           </CCol>
           <CCol xs={4} md={3} className="d-flex justify-content-end">
@@ -148,7 +160,7 @@ const Roles = () => {
                 disabled={!enLinea}
                 title={enLinea ? undefined : 'Sin conexión: requiere el servidor'}
               >
-                <CIcon icon={cilPlus} className="me-2" /> Rol
+                <CIcon icon={cilPlus} className="me-2" /> Nuevo rol
               </CButton>
             )}
           </CCol>
@@ -166,6 +178,41 @@ const Roles = () => {
       )}
 
       <CCardBody>
+        {cargando && roles.length === 0 && (
+          <div className="text-center text-body-secondary py-4">
+            <CSpinner size="sm" className="me-2" />
+            Cargando roles…
+          </div>
+        )}
+        {!cargando && error && (
+          <CAlert
+            color="danger"
+            className="d-flex align-items-center justify-content-between gap-2"
+          >
+            <span>No se pudieron cargar los roles: {error}</span>
+            <CButton color="danger" size="sm" variant="outline" onClick={cargarDatos}>
+              Reintentar
+            </CButton>
+          </CAlert>
+        )}
+        {!cargando && !error && enLinea && rolesFiltrados.length === 0 && (
+          <p className="text-body-secondary text-center py-4 mb-0">
+            {roles.length === 0
+              ? 'No hay roles registrados.'
+              : `Sin resultados para «${busqueda}».`}
+          </p>
+        )}
+        {rolesFiltrados.length > 0 && (
+          <div className="d-flex flex-wrap align-items-center gap-3 small text-body-secondary mb-3">
+            <span>Permisos:</span>
+            {ACCIONES.map((a) => (
+              <span key={a.key} className="d-inline-flex align-items-center gap-1">
+                <span className="roles-perm-dot bg-primary text-white">{a.letra}</span>
+                {a.label}
+              </span>
+            ))}
+          </div>
+        )}
         {rolesFiltrados.map((rol) => (
           <RolesCard
             key={rol.id}
@@ -173,7 +220,6 @@ const Roles = () => {
             onEditar={handleEditar}
             onEliminar={handleEliminar}
             onPermisos={handlePermisos}
-            onRecargar={cargarDatos}
             puedeEditar={puedeEditar && enLinea}
             puedeEliminar={puedeEliminar && enLinea}
           />
@@ -187,7 +233,12 @@ const Roles = () => {
       />
       <ModalPermisos
         visible={modalPermisosVisible}
-        onClose={() => setModalPermisosVisible(false)}
+        onClose={() => {
+          // Refresca las tarjetas: al guardar permisos, la vista debe reflejar
+          // el nuevo estado (si no, los puntos quedan viejos — P1 del critique).
+          setModalPermisosVisible(false)
+          cargarDatos()
+        }}
         rol={rolSeleccionado}
       />
     </CCard>

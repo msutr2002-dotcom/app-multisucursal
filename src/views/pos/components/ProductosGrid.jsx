@@ -18,22 +18,47 @@ function precioTile(p) {
  * RF-C5: grid de tiles para el POS en modo comida. Pestañas = categorías del
  * catálogo local (+ "Todos"). Tap = +1 al carrito (fusiona línea); productos
  * sin stock quedan atenuados y no cliqueables.
+ *
+ * padre/hijo: solo se listan las RAÍCES (padres + sueltos). Un padre es una
+ * entrada que muestra "N variantes", el precio más bajo de sus hijos y el
+ * stock sumado; al tocarlo se eligen sus variantes (ModalVariantes). Los hijos
+ * NO se listan sueltos.
  */
 const ProductosGrid = ({ productos, stockPorProducto, onAgregar }) => {
   const [activa, setActiva] = useState('__todos__')
 
+  // Hijos indexados por id_padre.
+  const hijosPorPadre = useMemo(() => {
+    const m = {}
+    productos.forEach((p) => {
+      if (!p.id_padre) return
+      if (!m[p.id_padre]) m[p.id_padre] = []
+      m[p.id_padre].push(p)
+    })
+    return m
+  }, [productos])
+
+  // Solo raíces (padres + productos sueltos).
+  const raices = useMemo(() => productos.filter((p) => !p.id_padre), [productos])
+
   const categorias = useMemo(() => {
     const set = new Set()
-    productos.forEach((p) => {
+    raices.forEach((p) => {
       if (p.categoria) set.add(p.categoria)
     })
     return [...set].sort((a, b) => a.localeCompare(b, 'es'))
-  }, [productos])
+  }, [raices])
 
   const visibles = useMemo(
-    () => (activa === '__todos__' ? productos : productos.filter((p) => p.categoria === activa)),
-    [productos, activa],
+    () => (activa === '__todos__' ? raices : raices.filter((p) => p.categoria === activa)),
+    [raices, activa],
   )
+
+  // D6: stock de la bodega activa; fallback al caché de sucursal.
+  const stockDe = (p) => {
+    const deBodega = stockPorProducto?.get(p.id)
+    return deBodega !== undefined ? deBodega : (p.stock?.find((s) => s.es_actual)?.stock ?? 0)
+  }
 
   return (
     <div className="mt-3">
@@ -65,11 +90,12 @@ const ProductosGrid = ({ productos, stockPorProducto, onAgregar }) => {
       ) : (
         <div className="pos-grid">
           {visibles.map((p) => {
-            // D6: stock de la bodega activa; fallback al caché de sucursal.
-            const deBodega = stockPorProducto?.get(p.id)
-            const stock =
-              deBodega !== undefined ? deBodega : (p.stock?.find((s) => s.es_actual)?.stock ?? 0)
+            const hijos = hijosPorPadre[p.id] || []
+            const esPadre = hijos.length > 0
+            // D2: el padre no tiene stock propio; se muestra la suma de sus hijos.
+            const stock = esPadre ? hijos.reduce((acc, h) => acc + stockDe(h), 0) : stockDe(p)
             const sinStock = stock <= 0
+            const precio = esPadre ? Math.min(...hijos.map(precioTile)) : precioTile(p)
             return (
               <button
                 key={p.id}
@@ -77,7 +103,13 @@ const ProductosGrid = ({ productos, stockPorProducto, onAgregar }) => {
                 className="btn border text-center p-2 d-flex flex-column align-items-center h-100 gap-1"
                 style={{ opacity: sinStock ? 0.45 : 1 }}
                 disabled={sinStock}
-                title={sinStock ? 'Sin stock en esta sucursal' : `Agregar ${p.name}`}
+                title={
+                  sinStock
+                    ? 'Sin stock en esta sucursal'
+                    : esPadre
+                      ? `Elegir variante de ${p.name}`
+                      : `Agregar ${p.name}`
+                }
                 onClick={() => onAgregar(p)}
               >
                 <div className="pos-imagen">
@@ -91,9 +123,14 @@ const ProductosGrid = ({ productos, stockPorProducto, onAgregar }) => {
                     {p.name}
                   </span>
                   <span className="text-primary fw-bold d-block" style={{ fontSize: '0.875rem' }}>
-                    {formatQ(precioTile(p))}
+                    {esPadre ? 'Desde ' : ''}
+                    {formatQ(precio)}
                   </span>
-                  {p.contiene_insumos ? (
+                  {esPadre ? (
+                    <CBadge color="secondary" className="mt-1">
+                      {hijos.length} variantes
+                    </CBadge>
+                  ) : p.contiene_insumos ? (
                     <CBadge color="info" className="mt-1">
                       Combo
                     </CBadge>

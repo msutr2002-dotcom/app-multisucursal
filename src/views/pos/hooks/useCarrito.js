@@ -16,7 +16,17 @@ function cargarCarrito(idSucursal) {
   try {
     const raw = localStorage.getItem(carritoKey(idSucursal))
     const parsed = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed : []
+    // Sanea líneas corruptas (sin precios o sin subtotal finito, p. ej. un PADRE
+    // contenedor que se hubiera colado): si no, el total queda NaN → Q0.00.
+    return Array.isArray(parsed)
+      ? parsed.filter(
+          (i) =>
+            i &&
+            Array.isArray(i.precios) &&
+            i.precios.length > 0 &&
+            Number.isFinite(i.subtotal),
+        )
+      : []
   } catch {
     return []
   }
@@ -61,6 +71,9 @@ export function useCarrito(idSucursal) {
     setItems((prev) => {
       const precios = producto.precios || []
       const tierInicial = calcularTier(precios, cantidadInicial, idPrecioManual)
+      // Defensa: un producto sin tier vendible (p. ej. un PADRE contenedor sin
+      // precios propios) no debe agregarse → evita el crash en la vista.
+      if (!tierInicial) return prev
       const idUnidad = tierInicial.id_unidad_venta || null
       const max = maxCantidad(producto.stockActual ?? 0, factorDe(tierInicial))
 
@@ -149,21 +162,26 @@ export function useCarrito(idSucursal) {
   // si no, recalcula AUTO con precios actuales; la unidad se deriva del tier
   const loadItems = useCallback((nuevos) => {
     setItems(
-      nuevos.map((i) => {
-        const tier = calcularTier(i.precios || [], i.cantidad, i.id_precio_producto ?? null)
-        return {
-          ...recalc(i, i.cantidad, i.id_precio_producto ?? null),
-          id_unidad_venta: i.id_unidad_venta ?? tier?.id_unidad_venta ?? null,
-          unidad: i.unidad ?? tier?.unidad ?? null,
-          unidadAbrev: i.unidadAbrev ?? tier?.unidadAbrev ?? null,
-        }
-      }),
+      (nuevos || [])
+        .filter((i) => i && Array.isArray(i.precios) && i.precios.length > 0)
+        .map((i) => {
+          const tier = calcularTier(i.precios, i.cantidad, i.id_precio_producto ?? null)
+          return {
+            ...recalc(i, i.cantidad, i.id_precio_producto ?? null),
+            id_unidad_venta: i.id_unidad_venta ?? tier?.id_unidad_venta ?? null,
+            unidad: i.unidad ?? tier?.unidad ?? null,
+            unidadAbrev: i.unidadAbrev ?? tier?.unidadAbrev ?? null,
+          }
+        }),
     )
   }, [])
 
   const clear = useCallback(() => setItems([]), [])
 
-  const total = useMemo(() => items.reduce((suma, i) => suma + i.subtotal, 0), [items])
+  const total = useMemo(
+    () => items.reduce((suma, i) => suma + (Number.isFinite(i.subtotal) ? i.subtotal : 0), 0),
+    [items],
+  )
 
   return {
     items,

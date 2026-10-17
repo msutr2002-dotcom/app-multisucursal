@@ -1,5 +1,7 @@
 # tasks: menú del POS por categoría
 
+**Estado:** CANCELADO 2026-10-17 — resuelto por `productos-padre-hijo` + el selector de variantes (`POSPage.hermanosProducto`, `ProductoDetalle`, `ModalVariantes`). No se implementa.
+
 Spec: `specs/pos-menu-categoria.md`. Una tarea a la vez; `[x]` tras aprobación del usuario.
 
 - [ ] Task 1: Refactor `ProductosGrid.jsx` a grid de **categorías**.

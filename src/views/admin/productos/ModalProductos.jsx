@@ -14,7 +14,10 @@ import {
   CFormSwitch,
   CRow,
   CCol,
+  CAlert,
 } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilLayers } from '@coreui/icons'
 import { useToast } from '../../../components/common/ToastContext'
 import ImagenProducto from '../../../components/common/ImagenProducto'
 import RecetaForm from './RecetaForm'
@@ -41,6 +44,7 @@ const vacio = {
   imagen: '',
   contiene_insumos: false,
   tipo_receta: 'producto',
+  id_padre: '',
 }
 
 const ModalProductos = ({
@@ -52,6 +56,8 @@ const ModalProductos = ({
   productos,
   modoIngrediente,
   ingredientes,
+  padreInicial,
+  nHijos = 0,
 }) => {
   const showToast = useToast()
   const [f, setF] = useState(vacio)
@@ -87,13 +93,26 @@ const ModalProductos = ({
           tipo_receta: (producto.componentes || []).some((c) => c.id_ingrediente)
             ? 'ingrediente'
             : 'producto',
+          id_padre: producto.id_padre || '',
         })
+      } else if (padreInicial) {
+        // Alta de una variante desde un padre ("Agregar variante")
+        setF({ ...vacio, id_padre: padreInicial.id })
       } else {
         setF(vacio)
       }
     }, 0)
     return () => clearTimeout(t)
-  }, [visible, producto])
+  }, [visible, producto, padreInicial])
+
+  // Un producto con hijos es contenedor: no se vende ni maneja stock/precio propio.
+  const esContenedor = nHijos > 0
+
+  // Candidatos a padre: productos raíz de la empresa (nunca el propio producto).
+  const candidatosPadre = useMemo(
+    () => (productos || []).filter((p) => !p.id_padre && p.id !== producto?.id),
+    [productos, producto],
+  )
 
   // Vista previa: si hay archivo nuevo, usa su URL local; si no, la imagen guardada
   const preview = useMemo(
@@ -200,7 +219,9 @@ const ModalProductos = ({
   return (
     <CModal visible={visible} onClose={onClose} size="lg">
       <CModalHeader onClose={onClose}>
-        <CModalTitle>{producto ? 'Editar Producto' : 'Nuevo Producto'}</CModalTitle>
+        <CModalTitle>
+          {producto ? 'Editar Producto' : padreInicial ? 'Nueva Variante' : 'Nuevo Producto'}
+        </CModalTitle>
       </CModalHeader>
       <CForm onSubmit={handleSubmit}>
         <CModalBody>
@@ -241,6 +262,43 @@ const ModalProductos = ({
               </div>
             </div>
           </div>
+
+          {esContenedor ? (
+            <CAlert color="info" className="py-2 d-flex align-items-center gap-2">
+              <span>
+                Este producto <strong>agrupa {nHijos} variante(s)</strong> y no se vende ni maneja
+                stock/precio propio. Su stock mostrado es la suma de sus variantes.
+              </span>
+            </CAlert>
+          ) : padreInicial && !producto ? (
+            // Alta de una variante desde el padre: el padre es contexto fijo
+            // (no un desplegable) para que se cree claramente "dentro" de él.
+            <CAlert color="info" className="py-2 d-flex align-items-center gap-2">
+              <CIcon icon={cilLayers} />
+              <span>
+                Nueva variante de <strong>{padreInicial.name}</strong>. Se vende sola con su propio
+                stock y precio, y no se lista aparte en el POS.
+              </span>
+            </CAlert>
+          ) : (
+            <CRow>
+              <CCol md={6} className="mb-3">
+                <CFormLabel>Es variante de</CFormLabel>
+                <CFormSelect name="id_padre" value={f.id_padre} onChange={handleChange}>
+                  <option value="">— Producto suelto (no es variante) —</option>
+                  {candidatosPadre.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+                <small className="text-body-secondary">
+                  Elige un producto para crear una variante suya. Un padre agrupa variantes y no se
+                  vende.
+                </small>
+              </CCol>
+            </CRow>
+          )}
 
           <CRow>
             <CCol md={3} className="mb-3">
@@ -290,44 +348,52 @@ const ModalProductos = ({
           </CRow>
 
           <CRow>
-            <CCol md={3} className="mb-3">
-              <CFormLabel>Precio compra (Q)</CFormLabel>
-              <CFormInput
-                type="number"
-                step="0.01"
-                min="0"
-                name="precio_compra"
-                value={f.precio_compra}
-                onChange={handleChange}
-                placeholder="0.00"
-              />
-            </CCol>
-            <CCol md={3} className="mb-3">
-              <CFormLabel>Unidad compra</CFormLabel>
-              <CFormSelect
-                name="id_unidad_compra"
-                value={f.id_unidad_compra}
-                onChange={handleChange}
-              >
-                <option value="">—</option>
-                {(opciones.unidades || []).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </CFormSelect>
-            </CCol>
-            <CCol md={3} className="mb-3">
-              <CFormLabel>Unidad venta</CFormLabel>
-              <CFormSelect name="id_unidad_venta" value={f.id_unidad_venta} onChange={handleChange}>
-                <option value="">—</option>
-                {(opciones.unidades || []).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </CFormSelect>
-            </CCol>
+            {!esContenedor && (
+              <>
+                <CCol md={3} className="mb-3">
+                  <CFormLabel>Precio compra (Q)</CFormLabel>
+                  <CFormInput
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="precio_compra"
+                    value={f.precio_compra}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                  />
+                </CCol>
+                <CCol md={3} className="mb-3">
+                  <CFormLabel>Unidad compra</CFormLabel>
+                  <CFormSelect
+                    name="id_unidad_compra"
+                    value={f.id_unidad_compra}
+                    onChange={handleChange}
+                  >
+                    <option value="">—</option>
+                    {(opciones.unidades || []).map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CCol>
+                <CCol md={3} className="mb-3">
+                  <CFormLabel>Unidad venta</CFormLabel>
+                  <CFormSelect
+                    name="id_unidad_venta"
+                    value={f.id_unidad_venta}
+                    onChange={handleChange}
+                  >
+                    <option value="">—</option>
+                    {(opciones.unidades || []).map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CCol>
+              </>
+            )}
             <CCol md={3} className="mb-3">
               <CFormLabel>Tipo</CFormLabel>
               <CFormSelect name="tipo" value={f.tipo} onChange={handleChange}>
@@ -351,7 +417,7 @@ const ModalProductos = ({
                 ))}
               </CFormSelect>
             </CCol>
-            {!producto && (
+            {!producto && !esContenedor && (
               <CCol md={4} className="mb-3">
                 <CFormLabel>Precio inicial Normal (Q)</CFormLabel>
                 <CFormInput
@@ -368,41 +434,43 @@ const ModalProductos = ({
           </CRow>
 
           {/* ===== COMBOS / RECETAS ===== */}
-          <div className="mb-3">
-            <CFormSwitch
-              label="Es Combo/Kit (arma con productos vendibles)"
-              checked={f.contiene_insumos && f.tipo_receta === 'producto'}
-              onChange={cambiarTipoReceta('producto')}
-            />
-            <small className="text-body-secondary d-block mt-1 mb-2">
-              Ej. Combo Alitas = 12 alitas + cocacola + papas. Al venderlo se descuenta el stock de
-              sus componentes; el combo no tiene stock propio.
-            </small>
-            {modoIngrediente && (
-              <>
-                <CFormSwitch
-                  label="Tiene ingredientes (arma con insumos)"
-                  checked={f.contiene_insumos && f.tipo_receta === 'ingrediente'}
-                  onChange={cambiarTipoReceta('ingrediente')}
-                />
-                <small className="text-body-secondary d-block mt-1">
-                  Ej. Hamburguesa = pan + carne + lechuga. Al venderlo se descuenta el stock de sus
-                  ingredientes.
-                </small>
-              </>
-            )}
-            {f.contiene_insumos && (
-              <RecetaForm
-                key={f.tipo_receta}
-                ref={recetaRef}
-                producto={producto}
-                productos={productos}
-                unidades={opciones.unidades}
-                modoIngrediente={f.tipo_receta === 'ingrediente'}
-                ingredientes={ingredientes}
+          {!esContenedor && (
+            <div className="mb-3">
+              <CFormSwitch
+                label="Es Combo/Kit (arma con productos vendibles)"
+                checked={f.contiene_insumos && f.tipo_receta === 'producto'}
+                onChange={cambiarTipoReceta('producto')}
               />
-            )}
-          </div>
+              <small className="text-body-secondary d-block mt-1 mb-2">
+                Ej. Combo Alitas = 12 alitas + cocacola + papas. Al venderlo se descuenta el stock
+                de sus componentes; el combo no tiene stock propio.
+              </small>
+              {modoIngrediente && (
+                <>
+                  <CFormSwitch
+                    label="Tiene ingredientes (arma con insumos)"
+                    checked={f.contiene_insumos && f.tipo_receta === 'ingrediente'}
+                    onChange={cambiarTipoReceta('ingrediente')}
+                  />
+                  <small className="text-body-secondary d-block mt-1">
+                    Ej. Hamburguesa = pan + carne + lechuga. Al venderlo se descuenta el stock de
+                    sus ingredientes.
+                  </small>
+                </>
+              )}
+              {f.contiene_insumos && (
+                <RecetaForm
+                  key={f.tipo_receta}
+                  ref={recetaRef}
+                  producto={producto}
+                  productos={productos}
+                  unidades={opciones.unidades}
+                  modoIngrediente={f.tipo_receta === 'ingrediente'}
+                  ingredientes={ingredientes}
+                />
+              )}
+            </div>
+          )}
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" type="button" onClick={onClose}>

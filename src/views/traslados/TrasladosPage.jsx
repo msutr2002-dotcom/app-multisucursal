@@ -312,15 +312,20 @@ const TrasladosPage = () => {
           setTotal(local.total)
           return
         }
-        // Las filas del servidor no traen sync_status: ya están confirmadas
+        // Las filas del servidor no traen sync_status: ya están confirmadas.
+        // Los traslados INTERNOS viven solo en el dispositivo (D8: `SYNCED` sin
+        // cola ni RPC), por lo que el servidor nunca los devuelve: hay que
+        // sumarlos siempre del espejo local, no solo si están PENDING/CONFLICT.
         const remotas = (data?.traslados || []).map((r) => ({ ...r, sync_status: 'SYNCED' }))
         const idsRemotos = new Set(remotas.map((r) => r.id))
-        const pendientes =
+        const localesExtra =
           offset === 0
-            ? local.traslados.filter((f) => esPendienteLocal(f) && !idsRemotos.has(f.id))
+            ? local.traslados.filter(
+                (f) => (esPendienteLocal(f) || f.tipo === 'interno') && !idsRemotos.has(f.id),
+              )
             : []
-        setTotal((data?.total ?? 0) + pendientes.length)
-        setFilas(offset > 0 ? [...remotas] : [...remotas, ...pendientes])
+        setTotal((data?.total ?? 0) + localesExtra.length)
+        setFilas(offset > 0 ? [...remotas] : [...remotas, ...localesExtra])
       } catch (e) {
         if (sec === secuenciaLista.current) showToast('danger', 'Error', String(e?.message || e))
       } finally {
@@ -573,7 +578,13 @@ const TrasladosPage = () => {
       motivo: motivoEnvio,
     })
       .then(() => {
-        showToast('success', 'Traslado anulado', 'El stock fue devuelto a la sucursal origen')
+        showToast(
+          'success',
+          'Traslado anulado',
+          fila.tipo === 'interno'
+            ? 'El stock fue devuelto a la bodega origen'
+            : 'El stock fue devuelto a la sucursal origen',
+        )
         setAAnular(null)
         setMotivo('')
         recargar()
@@ -769,7 +780,8 @@ const TrasladosPage = () => {
                   <td className="text-end">
                     {esEnviados
                       ? puedeAnular &&
-                        f.estado === 'enviado' && (
+                        (f.estado === 'enviado' ||
+                          (f.tipo === 'interno' && f.estado === 'recibido')) && (
                           <CButton
                             color="danger"
                             variant="outline"

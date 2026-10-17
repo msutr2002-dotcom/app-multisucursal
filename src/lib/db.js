@@ -115,6 +115,13 @@ db.version(12).stores({
   colores: 'id, id_empresa, name',
 })
 
+// productos-padre-hijo (spec productos-padre-hijo): se indexa `id_padre` para
+// agrupar variantes offline. `id_padre`/`hijos` ya viajan en el payload de
+// `get_productos_admin` (spread) hacia `db.productos`.
+db.version(13).stores({
+  productos: 'id, sku, name, id_empresa, id_categoria, id_marca, id_padre, [id_empresa+sku]',
+})
+
 export const getLocalDbStatus = async () => {
   const productosCount = await db.productos.count()
   const ventasPendientesSync = await db.cola_sincronizacion

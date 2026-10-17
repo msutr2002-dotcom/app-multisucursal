@@ -52,9 +52,28 @@ const RecetaForm = forwardRef(
     const precioNormalDe = (p) =>
       (p?.precios || []).find((t) => (t.tipo || '').trim().toUpperCase() === 'NORMAL')
 
-    const opcionesProducto = (productos || [])
-      .filter((p) => p.id !== producto?.id && !p.contiene_insumos)
+    // D5: un combo consume HIJOS, nunca padres. Los candidatos son productos
+    // vendibles (sueltos o hijos) que no sean combo (D7: combos no se anidan) ni
+    // el propio producto. Los hijos se agrupan bajo su padre (<optgroup>).
+    const hijosDeProducto = (id) => (productos || []).filter((p) => p.id_padre === id)
+    const esPadreProducto = (p) => hijosDeProducto(p.id).length > 0
+
+    const candidatosProducto = (productos || []).filter(
+      (p) => p.id !== producto?.id && !p.contiene_insumos && !esPadreProducto(p),
+    )
+    const opcionesProducto = candidatosProducto
+      .filter((p) => !p.id_padre)
       .sort((a, b) => a.name.localeCompare(b.name))
+    const gruposProducto = (productos || [])
+      .filter((p) => esPadreProducto(p))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((padre) => ({
+        padre,
+        hijos: candidatosProducto
+          .filter((h) => h.id_padre === padre.id)
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      }))
+      .filter((g) => g.hijos.length > 0)
 
     const opcionesIngrediente = (ingredientes || [])
       .filter((i) => i.activo !== false)
@@ -267,11 +286,22 @@ const RecetaForm = forwardRef(
                       {i.unidad_abrev ? ` (${i.unidad_abrev})` : ''}
                     </option>
                   ))
-                : opcionesProducto.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
+                : [
+                    opcionesProducto.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    )),
+                    gruposProducto.map((g) => (
+                      <optgroup key={g.padre.id} label={g.padre.name}>
+                        {g.hijos.map((h) => (
+                          <option key={h.id} value={h.id}>
+                            {h.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )),
+                  ]}
             </CFormSelect>
           </CCol>
           <CCol xs={4} md={2}>

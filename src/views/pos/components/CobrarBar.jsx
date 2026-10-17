@@ -21,7 +21,7 @@ const CobrarBar = ({ count, total, onClick }) => (
           {count}
         </CBadge>
       </span>
-      <strong className="fs-5 monto">{formatQ(total)}</strong>
+      <strong className="fs-5 monto monto-sobre-color">{formatQ(total)}</strong>
     </CButton>
   </div>
 )

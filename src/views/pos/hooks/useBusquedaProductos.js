@@ -131,7 +131,9 @@ export function useBusquedaProductos(idSucursal) {
             return
           }
 
+          // padre/hijo: no listar hijos sueltos (se alcanzan desde su padre).
           const ordenados = locales
+            .filter((p) => !p.id_padre)
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
             .slice(0, 30)
           setResults(ordenados)
@@ -157,7 +159,8 @@ export function useBusquedaProductos(idSucursal) {
           return
         }
 
-        setResults(arr)
+        // padre/hijo: no listar hijos sueltos (se alcanzan desde su padre).
+        setResults(arr.filter((p) => !p.id_padre))
         // OJO: aquí NO se modifica selected (eso cerraba el detalle)
       } catch (err) {
         console.error('Error buscando productos:', err)

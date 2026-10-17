@@ -61,6 +61,7 @@ const Productos = () => {
 
   const [modalProducto, setModalProducto] = useState(false)
   const [productoSel, setProductoSel] = useState(null)
+  const [padreInicial, setPadreInicial] = useState(null)
   const [modalPrecios, setModalPrecios] = useState(false)
   const [modalStock, setModalStock] = useState(false)
   const [aEliminar, setAEliminar] = useState(null)
@@ -170,6 +171,7 @@ const Productos = () => {
       p_id_marca: datos.id_marca || null,
       p_id_proveedor: datos.id_proveedor || null,
       p_id_color: datos.id_color || null,
+      p_id_padre: datos.id_padre || null,
       p_precio_compra: toCents(datos.precio_compra) ?? 0,
       p_tipo: datos.tipo,
       p_estado: datos.estado,
@@ -273,7 +275,16 @@ const Productos = () => {
     }
   }
 
-  const filtrados = productos.filter((p) => {
+  // Agrupación padre/hijo: hijos indexados por id_padre.
+  const hijosPorPadre = {}
+  productos.forEach((p) => {
+    if (p.id_padre) {
+      if (!hijosPorPadre[p.id_padre]) hijosPorPadre[p.id_padre] = []
+      hijosPorPadre[p.id_padre].push(p)
+    }
+  })
+
+  const coincide = (p) => {
     const q = busqueda.toLowerCase()
     const okBusq =
       p.name?.toLowerCase().includes(q) ||
@@ -282,7 +293,24 @@ const Productos = () => {
     const okEstado = !filtroEstado || p.estado === filtroEstado
     const okCat = !filtroCategoria || p.id_categoria === filtroCategoria
     return okBusq && okEstado && okCat
-  })
+  }
+
+  // Solo raíces (padres + productos sueltos). Un padre entra si él o alguna
+  // de sus variantes coincide con los filtros.
+  const filtrados = productos.filter(
+    (p) => !p.id_padre && (coincide(p) || (hijosPorPadre[p.id] || []).some(coincide)),
+  )
+
+  const abrirEditar = (p) => {
+    setPadreInicial(null)
+    setProductoSel(p)
+    setModalProducto(true)
+  }
+  const abrirAgregarVariante = (p) => {
+    setProductoSel(null)
+    setPadreInicial(p)
+    setModalProducto(true)
+  }
 
   return (
     <CCard>
@@ -327,6 +355,7 @@ const Productos = () => {
                 color="primary"
                 className="text-nowrap"
                 onClick={() => {
+                  setPadreInicial(null)
                   setProductoSel(null)
                   setModalProducto(true)
                 }}
@@ -355,13 +384,13 @@ const Productos = () => {
             <div className="d-none d-md-block table-responsive">
               <ProductosTabla
                 productos={filtrados}
+                hijosPorPadre={hijosPorPadre}
                 idSucursalActual={idSucursalActual}
                 puedeEditar={puedeEditar}
                 puedeEliminar={puedeEliminar}
-                onEditar={(p) => {
-                  setProductoSel(p)
-                  setModalProducto(true)
-                }}
+                puedeCrear={puedeCrear}
+                onEditar={abrirEditar}
+                onAgregarVariante={abrirAgregarVariante}
                 onPrecios={(p) => {
                   setProductoSel(p)
                   setModalPrecios(true)
@@ -379,13 +408,13 @@ const Productos = () => {
             <div className="d-md-none lista-tarjetas p-2">
               <ProductosTarjeta
                 productos={filtrados}
+                hijosPorPadre={hijosPorPadre}
                 idSucursalActual={idSucursalActual}
                 puedeEditar={puedeEditar}
                 puedeEliminar={puedeEliminar}
-                onEditar={(p) => {
-                  setProductoSel(p)
-                  setModalProducto(true)
-                }}
+                puedeCrear={puedeCrear}
+                onEditar={abrirEditar}
+                onAgregarVariante={abrirAgregarVariante}
                 onPrecios={(p) => {
                   setProductoSel(p)
                   setModalPrecios(true)
@@ -404,13 +433,18 @@ const Productos = () => {
 
       <ModalProductos
         visible={modalProducto}
-        onClose={() => setModalProducto(false)}
+        onClose={() => {
+          setModalProducto(false)
+          setPadreInicial(null)
+        }}
         onSave={handleGuardar}
         producto={productoSel}
         opciones={opciones}
         productos={productos}
         modoIngrediente={activarIngredientes}
         ingredientes={ingredientes}
+        padreInicial={padreInicial}
+        nHijos={(hijosPorPadre[productoSel?.id] || []).length}
       />
 
       <ModalPrecios

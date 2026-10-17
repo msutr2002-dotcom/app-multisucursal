@@ -17,7 +17,14 @@ import CampoNumero from '../../../components/common/CampoNumero'
  * (imagen + descripción en panel blanco), plegado por defecto. El remount por
  * `key={selected.id}` en POSPage lo reinicia al cambiar de producto.
  */
-const ProductoDetalle = ({ producto, stockBodega, onAgregar, colores = [], onCambiarColor }) => {
+const ProductoDetalle = ({
+  producto,
+  stockBodega,
+  onAgregar,
+  colores = [],
+  onCambiarColor,
+  etiquetaSelector = 'Color',
+}) => {
   const [cantidad, setCantidad] = useState(1)
   const [override, setOverride] = useState(null) // null = Auto
   const [abierto, setAbierto] = useState(false)
@@ -100,7 +107,7 @@ const ProductoDetalle = ({ producto, stockBodega, onAgregar, colores = [], onCam
           <div className="col-12 col-md-7">
             {colores.length > 1 && (
               <div className="d-flex align-items-center gap-2 mb-2">
-                <span className="small text-body-secondary">Color:</span>
+                <span className="small text-body-secondary">{etiquetaSelector}:</span>
                 <CFormSelect
                   size="sm"
                   aria-label="Color"

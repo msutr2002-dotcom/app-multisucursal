@@ -4,40 +4,62 @@ import CIcon from '@coreui/icons-react'
 import { cilX } from '@coreui/icons'
 import { formatQ } from '../../../utils/format'
 import ImagenProducto from '../../../components/common/ImagenProducto'
+import { precioNormal } from '../precioUtils'
+
+/** Precio a mostrar de una opción: tier (`.precio`) o producto (tier NORMAL). */
+function precioDe(op) {
+  if (op == null) return 0
+  if (op.precio != null) return op.precio
+  return precioNormal(op.precios || [])?.precio ?? 0
+}
 
 /**
- * ModalVariantes — pantalla de selección de variantes/opciones de un producto
- * (ej. "Pollo" → "Menú Súper Campero Q68.00", "Menú Campero Q53.00").
+ * ModalVariantes — pantalla de selección de opciones de un producto.
  *
- * Muestra cada variante como una fila con: imagen pequeña a la izquierda,
- * nombre y precio en el centro, y un radio button a la derecha. Al elegir una
- * variante se habilita el botón "Continuar" para agregarla al carrito.
+ * Dos modos:
+ * 1. **Variantes de un padre (id_padre):** llega `opciones` con los productos
+ *    hijos; cada fila es un producto vendible con su precio (D4).
+ * 2. **Tiers de precio:** sin `opciones`, cada `precio` del producto es una
+ *    opción (ej. "Pollo" → Menú Súper / Menú).
+ *
+ * Muestra cada opción como una fila con imagen, nombre y precio, y un radio a
+ * la derecha; "Continuar" agrega la opción elegida al carrito.
  *
  * @param {object} props
  * @param {boolean} props.visible
  * @param {Function} props.onClose
- * @param {object} props.producto  Producto padre con `precios`, `name`, `imagen`, `id_color`
- * @param {Function} props.onSeleccionar  (variante) => se agrega al carrito
+ * @param {object} props.producto  Producto (padre o con tiers) con `precios`, `name`, `imagen`
+ * @param {Array}  [props.opciones]  Lista explícita de opciones (ej. hijos de un padre)
+ * @param {Function} props.onSeleccionar  (opcionElegida) => se agrega al carrito
  */
-const ModalVariantes = ({ visible, onClose, producto, onSeleccionar }) => {
+const ModalVariantes = ({ visible, onClose, producto, opciones, onSeleccionar }) => {
   const precios = producto?.precios || []
 
-  // Variantes: si hay múltiples precios, cada uno es una opción.
-  // Si no hay precios, el producto es la única opción.
-  const opciones = (precios.length > 0 ? precios : [producto]).filter((op) => op != null)
+  // Si llega una lista explícita (variantes = hijos), se usa tal cual.
+  // Si no: múltiples precios → cada tier es una opción; sin precios → el producto.
+  const lista =
+    Array.isArray(opciones) && opciones.length > 0
+      ? opciones
+      : precios.length > 0
+        ? precios
+        : [producto]
+  const opcionesFinales = lista.filter((op) => op != null)
 
-  const [seleccionadaId, setSeleccionadaId] = useState(
-    opciones.length > 0 ? (opciones[0]?.id ?? null) : null,
-  )
+  const [seleccionadaId, setSeleccionadaId] = useState(opcionesFinales[0]?.id ?? null)
 
-  const seleccionar = (id) => {
-    setSeleccionadaId(id)
-  }
+  const seleccionar = (id) => setSeleccionadaId(id)
 
-  const opcionSeleccionada = opciones.find((o) => o?.id === seleccionadaId) || opciones[0]
+  const opcionSeleccionada =
+    opcionesFinales.find((o) => o?.id === seleccionadaId) || opcionesFinales[0]
+
+  // Una opción es válida si tiene precio propio (tier) o precios (producto).
+  // Evita enviar un PADRE contenedor (sin precios) al carrito.
+  const opcionValida =
+    !!opcionSeleccionada &&
+    (opcionSeleccionada.precio != null || (opcionSeleccionada.precios || []).length > 0)
 
   const continuar = () => {
-    if (opcionSeleccionada) {
+    if (opcionSeleccionada && opcionValida) {
       onSeleccionar(opcionSeleccionada)
       onClose()
     }
@@ -49,14 +71,14 @@ const ModalVariantes = ({ visible, onClose, producto, onSeleccionar }) => {
         <CModalTitle>Elije tu producto</CModalTitle>
       </CModalHeader>
       <CModalBody>
-        {opciones.length === 0 ? (
+        {opcionesFinales.length === 0 ? (
           <div className="text-center py-4">
             <span className="text-body-secondary">No hay variantes disponibles</span>
           </div>
         ) : (
           <div>
-            {opciones.map((op, index) => {
-              const precio = op?.precio ?? 0
+            {opcionesFinales.map((op, index) => {
+              const precio = precioDe(op)
               const nombre = op?.name || op?.tipo || 'Producto'
               const imagen = op?.imagen || producto?.imagen
               const isChecked = op?.id === seleccionadaId
@@ -103,12 +125,7 @@ const ModalVariantes = ({ visible, onClose, producto, onSeleccionar }) => {
           <CIcon icon={cilX} className="me-1" />
           Cancelar
         </CButton>
-        <CButton
-          color="success"
-          disabled={!opcionSeleccionada}
-          onClick={continuar}
-          className="w-48"
-        >
+        <CButton color="success" disabled={!opcionValida} onClick={continuar} className="w-48">
           Continuar
         </CButton>
       </CModalFooter>

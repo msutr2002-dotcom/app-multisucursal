@@ -178,6 +178,24 @@ export async function registrarTrasladoLocal({
           )
         }
         await db.stock_bodega.put({ ...stockRow, stock: stockRow.stock - base })
+        // interno: el destino es otra bodega de la MISMA sucursal y no hay paso
+        // de recepción (D8, operación 100% local) → el stock llega al instante
+        // (auto-aceptado), si no queda "en tránsito" sin forma de aceptarlo.
+        if (esInterno) {
+          const destRow = await db.stock_bodega.get({
+            id_bodega: idBodegaDestino,
+            id_producto: r.id_producto,
+          })
+          if (destRow) {
+            await db.stock_bodega.put({ ...destRow, stock: destRow.stock + base })
+          } else {
+            await db.stock_bodega.add({
+              id_bodega: idBodegaDestino,
+              id_producto: r.id_producto,
+              stock: base,
+            })
+          }
+        }
       } else {
         const stockRow = await db.productos_sucursal.get([idSucursalOrigen, r.id_producto])
         if (!stockRow) {
@@ -204,7 +222,11 @@ export async function registrarTrasladoLocal({
       id_bodega_destino: idBodegaDestino,
       id_usuario: idUsuario ?? null,
       fecha: new Date().toISOString(),
-      estado: 'enviado',
+      // los internos se aplican de una sola vez (stock ya en la bodega destino)
+      // → nacen 'recibido' (D8, sin paso de recepción en la misma sucursal).
+      estado: esInterno ? 'recibido' : 'enviado',
+      id_usuario_receptor: esInterno ? (idUsuario ?? null) : null,
+      fecha_recepcion: esInterno ? new Date().toISOString() : null,
       // los internos son 100% locales (spec D8: sin red requerida): no se
       // encolan y se marcan SYNCED para no mostrar el badge "sin sincronizar"
       sync_status: esInterno ? 'SYNCED' : 'PENDING',
@@ -218,7 +240,8 @@ export async function registrarTrasladoLocal({
         id_traslado: idTraslado,
         id_producto: r.id_producto,
         cantidad_enviada: r.cantidad,
-        cantidad_recibida: null,
+        // interno auto-aceptado: lo enviado ya llegó (no hay recepción aparte)
+        cantidad_recibida: esInterno ? r.cantidad : null,
         id_precio_producto: r.id_precio_producto,
         factor: r.factor,
       })),
@@ -463,25 +486,40 @@ export async function anularTrasladoLocal({ idTraslado, idSucursal, idUsuario, m
   if (traslado.id_sucursal_origen !== idSucursal) {
     throw new Error('Solo la sucursal origen puede anular el traslado')
   }
-  if (traslado.estado !== 'enviado') {
-    throw new Error(`El traslado ya fue ${traslado.estado} y no puede anularse`)
-  }
-
-  // multibodega Task 8: los traslados internos se anulan 100% local (sin red,
-  // sin RPC), revirtiendo stock_bodega en la misma transacción.
+  // multibodega Task 8/13: los traslados internos se anulan 100% local (sin red,
+  // sin RPC). Se aplican al instante (auto-aceptados: nacen 'recibido'), por lo
+  // que la anulación revierte AMBOS lados —origen recupera lo enviado y destino
+  // pierde lo recibido— en la misma transacción.
   if (traslado.tipo === 'interno') {
+    if (traslado.estado === 'anulado') {
+      throw new Error('El traslado ya está anulado')
+    }
     await db.transaction('rw', [db.stock_bodega, db.traslados, db.detalle_traslado], async () => {
       const detalles = await db.detalle_traslado.where('id_traslado').equals(idTraslado).toArray()
       for (const d of detalles) {
-        const row = await db.stock_bodega.get({
+        const factor = d.factor || 1
+        const rowOrigen = await db.stock_bodega.get({
           id_bodega: traslado.id_bodega_origen,
           id_producto: d.id_producto,
         })
-        if (row) {
+        if (rowOrigen) {
           await db.stock_bodega.put({
-            ...row,
-            stock: row.stock + d.cantidad_enviada * (d.factor || 1),
+            ...rowOrigen,
+            stock: rowOrigen.stock + d.cantidad_enviada * factor,
           })
+        }
+        const recibida = (d.cantidad_recibida ?? 0) * factor
+        if (recibida > 0) {
+          const rowDestino = await db.stock_bodega.get({
+            id_bodega: traslado.id_bodega_destino,
+            id_producto: d.id_producto,
+          })
+          if (rowDestino) {
+            await db.stock_bodega.put({
+              ...rowDestino,
+              stock: Math.max(0, rowDestino.stock - recibida),
+            })
+          }
         }
       }
       await db.traslados.update(idTraslado, {
@@ -493,6 +531,10 @@ export async function anularTrasladoLocal({ idTraslado, idSucursal, idUsuario, m
     })
     avisarTraslados()
     return { idTraslado, estado: 'anulado' }
+  }
+
+  if (traslado.estado !== 'enviado') {
+    throw new Error(`El traslado ya fue ${traslado.estado} y no puede anularse`)
   }
 
   if (traslado.sync_status !== 'SYNCED') {

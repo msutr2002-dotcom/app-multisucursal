@@ -4,7 +4,7 @@ import CIcon from '@coreui/icons-react'
 import { cilBasket, cilClipboard, cilGrid } from '@coreui/icons'
 import { useBusquedaProductos } from './hooks/useBusquedaProductos'
 import { useCarrito } from './hooks/useCarrito'
-import { grupoColores } from './colorUtils'
+import { grupoColores, nombreColor } from './colorUtils'
 import useFlagsSucursal from '../../hooks/useFlagsSucursal'
 import BuscadorProducto from './components/BuscadorProducto'
 import EstadoVacio from './components/EstadoVacio'
@@ -249,11 +249,45 @@ const POSPage = () => {
     }
   }, [recargarGrid, cargarColores])
 
-  // papel-iris: colores hermanos del producto seleccionado (mismo nombre base).
-  const coloresHermanos = useMemo(
-    () => grupoColores(selected, productosGrid, coloresPorId, stockDeProducto),
-    [selected, productosGrid, coloresPorId, stockDeProducto],
-  )
+  // padre/hijo (D4): un producto raíz con hijos es un CONTENEDOR no vendible;
+  // al elegirlo se abre la lista de sus variantes (hijos vendibles).
+  const hijosPorPadre = useMemo(() => {
+    const m = {}
+    productosGrid.forEach((p) => {
+      if (!p.id_padre) return
+      if (!m[p.id_padre]) m[p.id_padre] = []
+      m[p.id_padre].push(p)
+    })
+    return m
+  }, [productosGrid])
+
+  const esPadre = useCallback((p) => !!p && (hijosPorPadre[p.id] || []).length > 0, [hijosPorPadre])
+  const hijosDe = useCallback((p) => (p ? hijosPorPadre[p.id] || [] : []), [hijosPorPadre])
+
+  // Variantes del producto seleccionado: primero por padre/hijo explícito (mismo
+  // `id_padre`; cubre papel-iris, que ya es padre/hijo) y como respaldo la
+  // heurística de color por nombre base (productos con color sin padre).
+  const hermanosProducto = useMemo(() => {
+    const idPadre = selected?.id_padre
+    if (idPadre) {
+      const hs = hijosPorPadre[idPadre] || []
+      if (hs.length >= 2) {
+        return hs
+          .map((h) => ({
+            id: h.id,
+            nombre: nombreColor(coloresPorId, h.id_color) || h.name,
+            activo: h.id === selected.id,
+            stock: stockDeProducto(h),
+            producto: h,
+          }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      }
+    }
+    return grupoColores(selected, productosGrid, coloresPorId, stockDeProducto)
+  }, [selected, productosGrid, coloresPorId, hijosPorPadre, stockDeProducto])
+
+  // Etiqueta del selector: "Color" si la variante tiene color; "Variante" si no.
+  const etiquetaSelectorVariantes = selected?.id_color ? 'Color' : 'Variante'
 
   const alternarVistaComida = () => {
     const nuevo = !vistaComida
@@ -261,17 +295,37 @@ const POSPage = () => {
     localStorage.setItem(`pos_vista_comida_${idSucursal}`, nuevo ? '1' : '0')
   }
 
-  // Tap del grid: si el producto tiene varias opciones (precios o combo),
-  // se abre el modal de variantes para elegir antes de agregar. Si no, se
-  // agrega directamente con +1 del tier Auto/NORMAL.
+  // Tap del grid: si el producto es un PADRE (tiene variantes/hijos), o tiene
+  // varias opciones (precios o combo), se abre el modal para elegir antes de
+  // agregar. Si no, se agrega directamente con +1 del tier Auto/NORMAL.
   const agregarDelGrid = (p) => {
-    const tieneVariantes = (p.precios && p.precios.length > 1) || p.contiene_insumos === true
+    const tieneVariantes =
+      esPadre(p) || (p.precios && p.precios.length > 1) || p.contiene_insumos === true
     if (tieneVariantes) {
       setVarianteProducto(p)
       setModalVariantes(true)
     } else {
       carrito.addItem({ ...p, stockActual: stockDeProducto(p) }, 1, null)
     }
+  }
+
+  // Un PADRE (contenedor, sin precio propio) no se vende como línea ni abre un
+  // modal: se abre el DETALLE de uno de sus hijos, donde el selector de color
+  // cambia entre variantes (papel-iris). Se elige un hijo con stock; si ninguno
+  // tiene, el primero.
+  const abrirDetalleDePadre = (p) => {
+    const hijos = hijosDe(p)
+    if (!hijos.length) return false
+    const elegido = hijos.find((h) => stockDeProducto(h) > 0) || hijos[0]
+    busqueda.seleccionar(elegido)
+    return true
+  }
+
+  // Selección desde el buscador: un padre abre el detalle de un hijo (con su
+  // selector de color); un hijo/suelto se selecciona normal.
+  const seleccionarDesdeBusqueda = (p) => {
+    if (esPadre(p) && abrirDetalleDePadre(p)) return
+    busqueda.seleccionar(p)
   }
 
   const agregarVarianteSeleccionada = (variante) => {
@@ -1120,7 +1174,10 @@ const POSPage = () => {
               results={busqueda.results}
               loading={busqueda.loading}
               coloresPorId={coloresPorId}
-              onSelect={busqueda.seleccionar}
+              esPadre={esPadre}
+              hijosDe={hijosDe}
+              stockDe={stockDeProducto}
+              onSelect={seleccionarDesdeBusqueda}
               seleccionarPorCodigo={busqueda.seleccionarPorCodigo}
               onEscape={busqueda.clear}
             />
@@ -1139,7 +1196,8 @@ const POSPage = () => {
                 producto={selected}
                 stockBodega={stockBodega.get(selected.id)}
                 idSucursalActual={idSucursal}
-                colores={coloresHermanos}
+                colores={hermanosProducto}
+                etiquetaSelector={etiquetaSelectorVariantes}
                 onCambiarColor={(p) => busqueda.seleccionar(p)}
                 onAgregar={(cantidad, override) => {
                   // Stock de la bodega activa (fallback al caché de sucursal — D6)
@@ -1284,9 +1342,14 @@ const POSPage = () => {
         onClose={() => setImpresionCotizacion(null)}
       />
       <ModalVariantes
+        key={varianteProducto?.id || 'sin-variante'}
         visible={modalVariantes}
-        onClose={() => setModalVariantes(false)}
+        onClose={() => {
+          setModalVariantes(false)
+          setVarianteProducto(null)
+        }}
         producto={varianteProducto}
+        opciones={esPadre(varianteProducto) ? hijosDe(varianteProducto) : null}
         onSeleccionar={agregarVarianteSeleccionada}
       />
       <ConflictResolverModal

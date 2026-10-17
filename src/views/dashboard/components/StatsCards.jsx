@@ -41,7 +41,7 @@ const StatsCards = ({ stats, loading, error = false, onReintentar }) => {
       <CCol xs={12} xl={4}>
         <div className="stat-hero">
           <div className="stat-hero-label">Ventas de hoy</div>
-          <div className="stat-hero-value monto">
+          <div className="stat-hero-value monto monto-sobre-color">
             {loading ? (
               <CSpinner color="light" size="sm" />
             ) : error ? (

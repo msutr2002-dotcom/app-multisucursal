@@ -1,6 +1,8 @@
 # Spec: Menú del POS por categoría (card = categoría, modal = productos)
 
-**Fecha:** 2026-10-15 · **Estado:** propuesta · **Módulo:** `pos-menu-categoria`
+**Fecha:** 2026-10-15 · **Estado:** CANCELADA 2026-10-17 · **Módulo:** `pos-menu-categoria`
+
+> **Cancelada (2026-10-17):** su objetivo (agrupar las variantes de un platillo en el menú del POS) quedó resuelto por `productos-padre-hijo` + el selector de variantes en `ProductoDetalle`/`ModalVariantes` (`POSPage.hermanosProducto`). No se implementa.
 
 ## Problema
 

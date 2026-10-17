@@ -756,6 +756,12 @@ body.dark-mode .text-muted {
   color: var(--pos-primary) !important;
 }
 
+/* Montos sobre fondos de color (cabecera teal de "Total a cobrar", barra de
+   "Cobrar"): el color primario quedaría camuflado con el propio fondo → blanco. */
+.monto.monto-sobre-color {
+  color: #fff !important;
+}
+
 /* Labels y leyendas pequeñas en modo oscuro */
 [data-bs-theme="dark"] .small.text-body-secondary,
 .dark .small.text-body-secondary,
@@ -769,4 +775,34 @@ body.dark-mode .small.text-body-secondary {
 body.dark-mode .btn-outline-secondary {
   border-color: rgba(255, 255, 255, 0.5) !important;
   color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Roles: visualización de permisos agrupada (permisos-agrupados).
+   Cada módulo es un chip con 4 bolitas V/C/E/D: rellenas = concedido,
+   vacías = sin permiso. Las variables --cui-* se adaptan solas al modo oscuro. */
+.roles-perm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: 0.5rem;
+  background-color: var(--cui-body-bg);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+}
+.roles-perm-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+.roles-perm-dot--off {
+  background-color: transparent;
+  border: 1px solid var(--cui-secondary-color);
+  color: var(--cui-body-color);
 }

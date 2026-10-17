@@ -21,6 +21,9 @@ const BuscadorProducto = ({
   results,
   loading,
   coloresPorId = {},
+  esPadre,
+  hijosDe,
+  stockDe,
   onSelect,
   seleccionarPorCodigo,
   onEscape,
@@ -192,10 +195,23 @@ const BuscadorProducto = ({
             }}
           >
             {results.map((p, i) => {
-              const stock = p.stock?.find((s) => s.es_actual)?.stock ?? 0
-              const precioMin = p.precios?.length ? Math.min(...p.precios.map((x) => x.precio)) : 0
+              // padre/hijo: un padre se muestra como una sola entrada con el
+              // stock sumado de sus hijos y el precio "Desde" el más barato.
+              const esPadreP = !!esPadre?.(p)
+              const hijos = esPadreP ? hijosDe?.(p) || [] : []
+              const stock = esPadreP
+                ? hijos.reduce((acc, h) => acc + (stockDe?.(h) ?? 0), 0)
+                : (p.stock?.find((s) => s.es_actual)?.stock ?? 0)
+              const precioMin = esPadreP
+                ? hijos.reduce((min, h) => {
+                    const m = h.precios?.length ? Math.min(...h.precios.map((x) => x.precio)) : min
+                    return m < min ? m : min
+                  }, Infinity)
+                : p.precios?.length
+                  ? Math.min(...p.precios.map((x) => x.precio))
+                  : 0
               const resaltado = i === idx
-              const color = nombreColor(coloresPorId, p.id_color)
+              const color = esPadreP ? null : nombreColor(coloresPorId, p.id_color)
 
               return (
                 <div
@@ -222,6 +238,11 @@ const BuscadorProducto = ({
                     <span className="d-flex flex-column">
                       <span className="d-flex align-items-center gap-1">
                         <strong className="small">{p.name}</strong>
+                        {esPadreP && (
+                          <CBadge color={resaltado ? 'light' : 'secondary'} className="fw-normal">
+                            {hijos.length} variantes
+                          </CBadge>
+                        )}
                         {color && (
                           <CBadge color={resaltado ? 'light' : 'info'} className="fw-normal">
                             {color}
@@ -244,7 +265,8 @@ const BuscadorProducto = ({
                       className="fw-bold small monto"
                       style={{ color: resaltado ? '#fff' : 'var(--pos-primary)' }}
                     >
-                      {formatQ(precioMin)}
+                      {esPadreP ? 'Desde ' : ''}
+                      {formatQ(precioMin === Infinity ? 0 : precioMin)}
                     </span>
                     <CBadge color={stock > 0 ? 'success' : 'danger'}>{stock}</CBadge>
                   </span>
