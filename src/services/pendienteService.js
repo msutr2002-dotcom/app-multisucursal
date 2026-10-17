@@ -190,15 +190,23 @@ export async function eliminarPendienteLocal(id, idSucursal) {
  * @returns {Promise<Array>} lista para el modal
  */
 export async function fusionarPendientes(idSucursal, local, servidor) {
-  const eventos = await db.cola_sincronizacion
-    .where('tabla')
-    .equals('ventas')
-    .filter((e) => e.operacion === 'INSERT')
-    .toArray()
+  const eventos = await db.cola_sincronizacion.where('tabla').equals('ventas').toArray()
   const sinSync = new Set(
-    eventos.filter((e) => e.sync_status !== 'SYNCED').map((e) => e.id_registro),
+    eventos
+      .filter((e) => e.operacion === 'INSERT' && e.sync_status !== 'SYNCED')
+      .map((e) => e.id_registro),
+  )
+  // F8 (fixes-prod): tombstones. Un DELETE aún sin sincronizar significa que el
+  // usuario ya borró el pendiente localmente pero el servidor (get_ventas_pendientes)
+  // todavía lo lista → hay que excluirlo del resultado para que no "resucite"
+  // al refrescar sin esperar a que el DELETE llegue a Supabase.
+  const borradosPendientes = new Set(
+    eventos
+      .filter((e) => e.operacion === 'DELETE' && e.sync_status !== 'SYNCED')
+      .map((e) => e.id_registro),
   )
   const serverIds = new Set(servidor.map((p) => p.id))
+  const servidorVigente = servidor.filter((s) => !borradosPendientes.has(s.id))
 
   const localesOk = local.filter((l) => sinSync.has(l.id) && !serverIds.has(l.id))
   const huerfanos = local.filter((l) => !sinSync.has(l.id) && !serverIds.has(l.id))
@@ -212,5 +220,5 @@ export async function fusionarPendientes(idSucursal, local, servidor) {
     })
   }
 
-  return [...localesOk, ...servidor]
+  return [...localesOk, ...servidorVigente]
 }

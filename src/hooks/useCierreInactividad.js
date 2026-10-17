@@ -68,6 +68,16 @@ export default function useCierreInactividad() {
 
     const intervalo = setInterval(revisar, INTERVALO_REVISION_MS)
 
+    // Producción: la pestaña suele quedar en segundo plano/minimizada y Chrome
+    // congela o estrangula los timers, así que el `setInterval` puede no correr
+    // por 15 min. Al volver a primer plano, el primer mousemove del usuario
+    // reiniciaría el reloj ANTES de que el interval dispare → la sesión nunca
+    // cerraría. Por eso re-evaluamos también al hacerse visible, al enfocar la
+    // ventana y al reanudar la página (bfcache), antes de cualquier interacción.
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') revisar()
+    }
+
     // Otra pestaña registró actividad → adoptar su marca.
     // Otra pestaña cerró sesión → cerrar esta también.
     const onStorage = (evento) => {
@@ -83,11 +93,17 @@ export default function useCierreInactividad() {
       window.addEventListener(evento, registrarActividad, { passive: true }),
     )
     window.addEventListener('storage', onStorage)
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', revisar)
+    window.addEventListener('pageshow', revisar)
 
     return () => {
       clearInterval(intervalo)
       EVENTOS_ACTIVIDAD.forEach((evento) => window.removeEventListener(evento, registrarActividad))
       window.removeEventListener('storage', onStorage)
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', revisar)
+      window.removeEventListener('pageshow', revisar)
     }
   }, [navigate])
 }

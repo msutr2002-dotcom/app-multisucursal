@@ -56,6 +56,21 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
     console.warn('No se pudieron cachear tipos de precio/colores:', e)
   }
 
+  // Recetas de combos (impresiones-copias): `get_productos_admin` ya devuelve
+  // `componentes` por producto (con `factor` denormalizado). Se aplanan a filas
+  // de `combo_componentes` para calcular la disponibilidad derivada offline.
+  const componentes = productos.flatMap((p) =>
+    (p.componentes || []).map((c) => ({
+      id: c.id,
+      id_producto: p.id,
+      id_producto_componente: c.id_producto_componente || null,
+      id_ingrediente: c.id_ingrediente || null,
+      cantidad: c.cantidad,
+      id_precio_producto: c.id_precio_producto || null,
+      factor: c.factor ?? 1,
+    })),
+  )
+
   await db.transaction(
     'rw',
     db.productos,
@@ -68,6 +83,7 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
     db.tipos_precio,
     db.proveedores,
     db.colores,
+    db.combo_componentes,
     async () => {
       // Guard en tiempo de commit: si hay eventos PENDING (ventas locales aún sin
       // sincronizar), el stock del servidor está desactualizado. Se conserva el
@@ -101,6 +117,7 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
       if (tiposPrecio.length) await db.tipos_precio.clear()
       if (proveedores.length) await db.proveedores.clear()
       if (colores.length) await db.colores.clear()
+      if (componentes.length) await db.combo_componentes.clear()
 
       await db.productos.bulkPut(productos)
       await db.productos_sucursal.bulkPut(stockSucursales)
@@ -110,6 +127,7 @@ export async function hidratarCatalogo(idEmpresa, idSucursal) {
       if (tiposPrecio.length) await db.tipos_precio.bulkPut(tiposPrecio)
       if (proveedores.length) await db.proveedores.bulkPut(proveedores)
       if (colores.length) await db.colores.bulkPut(colores)
+      if (componentes.length) await db.combo_componentes.bulkPut(componentes)
       if (metodos.length) await db.metodos_pago.bulkPut(metodos)
     },
   )
@@ -490,6 +508,16 @@ export async function hidratarBodegas(idSucursal) {
 
     await db.bodegas.clear()
     await db.bodegas.bulkPut(lista)
+
+    // F7 (fixes-prod): avisar que `stock_bodega` ya está fresco. Sin este evento,
+    // el POS (que llama a `hidratarCatalogoParaSucursal` sin esperar a que
+    // `hidratarBodegas` termine) lee un stock viejo y no se actualiza hasta
+    // refrescar la página.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('cola-sincronizada', { detail: { tabla: 'stock_bodega' } }),
+      )
+    }
     return lista.length
   } catch (err) {
     console.warn('No se pudieron hidratar bodegas:', err?.message || err)

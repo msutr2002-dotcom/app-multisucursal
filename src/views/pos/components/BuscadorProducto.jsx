@@ -201,7 +201,7 @@ const BuscadorProducto = ({
               const hijos = esPadreP ? hijosDe?.(p) || [] : []
               const stock = esPadreP
                 ? hijos.reduce((acc, h) => acc + (stockDe?.(h) ?? 0), 0)
-                : (p.stock?.find((s) => s.es_actual)?.stock ?? 0)
+                : (stockDe?.(p) ?? p.stock?.find((s) => s.es_actual)?.stock ?? 0)
               const precioMin = esPadreP
                 ? hijos.reduce((min, h) => {
                     const m = h.precios?.length ? Math.min(...h.precios.map((x) => x.precio)) : min

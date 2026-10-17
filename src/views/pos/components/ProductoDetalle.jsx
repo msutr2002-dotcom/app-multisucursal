@@ -84,7 +84,8 @@ const ProductoDetalle = ({
               color={stockActual > 0 ? 'success' : 'danger'}
               className="rounded-pill px-2 py-1"
             >
-              Stock: {stockActual}
+              {producto.contiene_insumos ? 'Disponible: ' : 'Stock: '}
+              {stockActual}
             </CBadge>
             {producto.marca && (
               <CBadge color="info" className="rounded-pill px-2 py-1">
@@ -166,7 +167,9 @@ const ProductoDetalle = ({
             )}
             {stockActual <= 0 && (
               <div className="text-danger small mt-2">
-                Sin stock en tu sucursal — revisa disponibilidad en otras bodegas
+                {producto.contiene_insumos
+                  ? 'Sin componentes disponibles para armar este combo'
+                  : 'Sin stock en tu sucursal — revisa disponibilidad en otras bodegas'}
               </div>
             )}
             {sinStockParaTier && (

@@ -34,3 +34,10 @@
   - Código completo 2026-10-09: toggle "Vista comida" en POSPage (visible solo `activar_ingredientes` ON, persistido en localStorage `pos_vista_comida_<id>`), `ProductosGrid.jsx` (tiles: ImagenProducto 48px, nombre, precio NORMAL/base con `formatQ`, badge Combo si `contiene_insumos`, botón `disabled` si stock 0), pestañas = categorías del catálogo local (`CNav` tabs + "Todos"), tap = `agregarDelGrid` → `addItem(..., 1, null)` (fusiona línea existente), refresco en `cola-sincronizada`/`online`. `BuscadorProducto` se mantiene visible; `selected` (detalle) tiene prioridad sobre el grid.
   - **Verificación:** sucursal ON → botón visible → pestañas por categoría → tap suma 1/1 → carrito reduce → sin stock atenuado → sucursal OFF → botón oculto → vista normal intacta; lint 0 errores.
   - *Estado:* **CÓDIGO COMPLETO 2026-10-09 — pendiente aprobación por prueba manual** · *Aprobación:* [ ]
+
+- [x] **Task 8 — Fix bug: guardar combos falla (`v_comp` ambiguo)**
+  - **Síntoma (reproducido 2026-10-16):** al crear/editar un combo, `create_producto_admin` OK pero `upsert_combo_componentes` falla con `SQLSTATE 42702: column reference "v_comp" is ambiguous`; el front muestra el toast genérico "No se pudo completar la operación".
+  - **Causa:** en `upsert_combo_componentes` el `INSERT ... SELECT` final usa alias `v_comp` para `jsonb_array_elements`, homónimo de la variable PL/pgSQL `v_comp` del `FOR`.
+  - **Fix:** renombrar solo el alias del SELECT final a `v_parte` (`tasks/sql/fix-upsert-combo-componentes.sql`, idempotente). `registrar_venta`/`anular_venta`/`registrar_cotizacion` no están afectadas (su `v_comp` es `record` sin alias homónimo).
+  - **Verificación:** SQL aplicado por el usuario 2026-10-16; probe creó un combo (1 componente) con `upsert_combo_componentes → {ok:true,componentes:1}` + `set_producto_contiene_insumos`/`upsert_precio_producto` OK y toast "Éxito"; producto de prueba borrado.
+  - *Estado:* **COMPLETADA 2026-10-16** · *Aprobación:* [x]

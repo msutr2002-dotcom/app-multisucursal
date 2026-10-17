@@ -5,6 +5,7 @@ import { cilBasket, cilClipboard, cilGrid } from '@coreui/icons'
 import { useBusquedaProductos } from './hooks/useBusquedaProductos'
 import { useCarrito } from './hooks/useCarrito'
 import { grupoColores, nombreColor } from './colorUtils'
+import { disponibilidadCombo, agruparComponentes } from './comboUtils'
 import useFlagsSucursal from '../../hooks/useFlagsSucursal'
 import BuscadorProducto from './components/BuscadorProducto'
 import EstadoVacio from './components/EstadoVacio'
@@ -161,6 +162,11 @@ const POSPage = () => {
     }
   }, [recargarStockBodega])
 
+  // impresiones-copias (D3/D4): receta de combos hidratada en Dexie y stock de
+  // ingredientes de la sucursal, para derivar la disponibilidad 100% offline.
+  const [componentesPorProducto, setComponentesPorProducto] = useState(() => new Map())
+  const [ingredientesStock, setIngredientesStock] = useState(() => new Map())
+
   // Stock del producto en la bodega activa; si la bodega no tiene fila, se cae
   // al caché de sucursal (`producto.stock` con `es_actual`) — spec D6.
   const stockDeProducto = useCallback(
@@ -232,14 +238,40 @@ const POSPage = () => {
       .catch(() => {})
   }, [])
 
+  // impresiones-copias: receta de combos (id_producto → componentes) y stock de
+  // ingredientes de la sucursal activa, ambos desde Dexie (offline-first).
+  const cargarComponentes = useCallback(() => {
+    if (!db.combo_componentes) return Promise.resolve()
+    return db.combo_componentes
+      .toArray()
+      .then((filas) => setComponentesPorProducto(agruparComponentes(filas)))
+      .catch(() => {})
+  }, [])
+
+  const cargarIngredientesStock = useCallback(() => {
+    if (!idSucursal || !db.ingredientes_sucursal) return Promise.resolve()
+    return db.ingredientes_sucursal
+      .where('id_sucursal')
+      .equals(idSucursal)
+      .toArray()
+      .then((filas) =>
+        setIngredientesStock(new Map(filas.map((f) => [f.id_ingrediente, f.stock ?? 0]))),
+      )
+      .catch(() => {})
+  }, [idSucursal])
+
   // Refresco del grid de comida al sincronizar/volver en línea (los flags de
   // sucursal los maneja `useFlagsSucursal`).
   useEffect(() => {
     recargarGrid()
     cargarColores()
+    cargarComponentes()
+    cargarIngredientesStock()
     const refrescar = () => {
       recargarGrid()
       cargarColores()
+      cargarComponentes()
+      cargarIngredientesStock()
     }
     window.addEventListener('cola-sincronizada', refrescar)
     window.addEventListener('online', refrescar)
@@ -247,7 +279,7 @@ const POSPage = () => {
       window.removeEventListener('cola-sincronizada', refrescar)
       window.removeEventListener('online', refrescar)
     }
-  }, [recargarGrid, cargarColores])
+  }, [recargarGrid, cargarColores, cargarComponentes, cargarIngredientesStock])
 
   // padre/hijo (D4): un producto raíz con hijos es un CONTENEDOR no vendible;
   // al elegirlo se abre la lista de sus variantes (hijos vendibles).
@@ -264,6 +296,47 @@ const POSPage = () => {
   const esPadre = useCallback((p) => !!p && (hijosPorPadre[p.id] || []).length > 0, [hijosPorPadre])
   const hijosDe = useCallback((p) => (p ? hijosPorPadre[p.id] || [] : []), [hijosPorPadre])
 
+  // impresiones-copias (D3): mapa de stock de la bodega activa para TODOS los
+  // productos del grid (con fallback al caché de sucursal), base del cálculo de
+  // disponibilidad de los componentes de un combo.
+  const stockEfectivoMap = useMemo(() => {
+    const m = new Map()
+    productosGrid.forEach((p) => {
+      const deBodega = stockBodega.get(p.id)
+      m.set(
+        p.id,
+        deBodega !== undefined ? deBodega : (p.stock?.find((s) => s.es_actual)?.stock ?? 0),
+      )
+    })
+    return m
+  }, [productosGrid, stockBodega])
+
+  // RF-IC3: stock EFECTIVO de un producto. Para un combo (`contiene_insumos`) es
+  // su disponibilidad derivada (no su stock propio, que es 0); para el resto,
+  // el stock de la bodega activa. Todo local (D4).
+  const disponibilidadDe = useCallback(
+    (p) => {
+      if (!p) return 0
+      if (p.contiene_insumos) {
+        return disponibilidadCombo(p.id, {
+          componentesPorProducto,
+          stockPorProducto: stockEfectivoMap,
+          ingredientesPorId: ingredientesStock,
+        })
+      }
+      return stockDeProducto(p)
+    },
+    [componentesPorProducto, stockEfectivoMap, ingredientesStock, stockDeProducto],
+  )
+
+  // Disponibilidad precalculada por producto para el grid (evita recalcular en
+  // cada render y permite sumar la de los hijos de un padre — D5).
+  const disponibilidadPorId = useMemo(() => {
+    const m = new Map()
+    productosGrid.forEach((p) => m.set(p.id, disponibilidadDe(p)))
+    return m
+  }, [productosGrid, disponibilidadDe])
+
   // Variantes del producto seleccionado: primero por padre/hijo explícito (mismo
   // `id_padre`; cubre papel-iris, que ya es padre/hijo) y como respaldo la
   // heurística de color por nombre base (productos con color sin padre).
@@ -277,14 +350,14 @@ const POSPage = () => {
             id: h.id,
             nombre: nombreColor(coloresPorId, h.id_color) || h.name,
             activo: h.id === selected.id,
-            stock: stockDeProducto(h),
+            stock: disponibilidadDe(h),
             producto: h,
           }))
           .sort((a, b) => a.nombre.localeCompare(b.nombre))
       }
     }
-    return grupoColores(selected, productosGrid, coloresPorId, stockDeProducto)
-  }, [selected, productosGrid, coloresPorId, hijosPorPadre, stockDeProducto])
+    return grupoColores(selected, productosGrid, coloresPorId, disponibilidadDe)
+  }, [selected, productosGrid, coloresPorId, hijosPorPadre, disponibilidadDe])
 
   // Etiqueta del selector: "Color" si la variante tiene color; "Variante" si no.
   const etiquetaSelectorVariantes = selected?.id_color ? 'Color' : 'Variante'
@@ -305,7 +378,7 @@ const POSPage = () => {
       setVarianteProducto(p)
       setModalVariantes(true)
     } else {
-      carrito.addItem({ ...p, stockActual: stockDeProducto(p) }, 1, null)
+      carrito.addItem({ ...p, stockActual: disponibilidadDe(p) }, 1, null)
     }
   }
 
@@ -316,7 +389,7 @@ const POSPage = () => {
   const abrirDetalleDePadre = (p) => {
     const hijos = hijosDe(p)
     if (!hijos.length) return false
-    const elegido = hijos.find((h) => stockDeProducto(h) > 0) || hijos[0]
+    const elegido = hijos.find((h) => disponibilidadDe(h) > 0) || hijos[0]
     busqueda.seleccionar(elegido)
     return true
   }
@@ -332,7 +405,7 @@ const POSPage = () => {
     carrito.addItem(
       {
         ...variante,
-        stockActual: stockDeProducto(variante),
+        stockActual: disponibilidadDe(variante),
       },
       1,
       null,
@@ -439,6 +512,19 @@ const POSPage = () => {
     cargarPendientes()
     cargarCotizaciones()
   }, [cargarPendientes, cargarCotizaciones])
+
+  // F8 (fixes-prod): cuando un evento de `ventas` se sincroniza (p. ej. el
+  // DELETE de un pendiente), refrescar la lista para que el contador/lista
+  // queden consistentes sin recargar la página.
+  useEffect(() => {
+    const refrescar = (e) => {
+      const t = e?.detail?.tabla
+      if (t && t !== 'ventas') return
+      cargarPendientes()
+    }
+    window.addEventListener('cola-sincronizada', refrescar)
+    return () => window.removeEventListener('cola-sincronizada', refrescar)
+  }, [cargarPendientes])
 
   // Offline-First: refresca el catálogo local en segundo plano (no bloquea la UI).
   // Si falla o está vacío, la búsqueda usa el RPC como fallback.
@@ -1176,7 +1262,7 @@ const POSPage = () => {
               coloresPorId={coloresPorId}
               esPadre={esPadre}
               hijosDe={hijosDe}
-              stockDe={stockDeProducto}
+              stockDe={disponibilidadDe}
               onSelect={seleccionarDesdeBusqueda}
               seleccionarPorCodigo={busqueda.seleccionarPorCodigo}
               onEscape={busqueda.clear}
@@ -1186,7 +1272,7 @@ const POSPage = () => {
           {vistaComida ? (
             <ProductosGrid
               productos={productosGrid}
-              stockPorProducto={stockBodega}
+              stockPorProducto={disponibilidadPorId}
               onAgregar={agregarDelGrid}
             />
           ) : selected ? (
@@ -1194,7 +1280,7 @@ const POSPage = () => {
               <ProductoDetalle
                 key={selected.id}
                 producto={selected}
-                stockBodega={stockBodega.get(selected.id)}
+                stockBodega={disponibilidadDe(selected)}
                 idSucursalActual={idSucursal}
                 colores={hermanosProducto}
                 etiquetaSelector={etiquetaSelectorVariantes}
@@ -1202,7 +1288,7 @@ const POSPage = () => {
                 onAgregar={(cantidad, override) => {
                   // Stock de la bodega activa (fallback al caché de sucursal — D6)
                   carrito.addItem(
-                    { ...selected, stockActual: stockDeProducto(selected) },
+                    { ...selected, stockActual: disponibilidadDe(selected) },
                     cantidad,
                     override,
                   )
