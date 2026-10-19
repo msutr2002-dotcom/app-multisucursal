@@ -34,7 +34,7 @@ const ResumenPago = ({
       {esEfectivo && falta > 0 && (
         <Fila
           label="Falta"
-          valor={<strong style={{ color: 'var(--cui-danger)' }}>{formatQ(falta)}</strong>}
+          valor={<strong style={{ color: 'var(--pos-danger)' }}>{formatQ(falta)}</strong>}
         />
       )}
 
@@ -45,13 +45,13 @@ const ResumenPago = ({
         <Fila
           label={`Descuento mayoreo (${descuentoBp / 100}%)`}
           valor={
-            <strong style={{ color: 'var(--cui-success)' }}>−{formatQ(descuentoMonto)}</strong>
+            <strong style={{ color: 'var(--pos-success)' }}>−{formatQ(descuentoMonto)}</strong>
           }
         />
       )}
       <div className="d-flex justify-content-between align-items-center pt-2 border-top mt-1">
         <span className="fw-bold">TOTAL</span>
-        <span className="fs-5 fw-bold monto" style={{ color: 'var(--pos-primary)' }}>
+        <span className="fs-5 fw-bold monto" style={{ color: 'var(--pos-accent)' }}>
           {formatQ(total)}
         </span>
       </div>

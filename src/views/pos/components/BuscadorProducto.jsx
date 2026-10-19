@@ -121,7 +121,7 @@ const BuscadorProducto = ({
           top: '50%',
           transform: 'translateY(-50%)',
           zIndex: 5,
-          color: 'var(--pos-primary)',
+          color: 'var(--pos-accent)',
           pointerEvents: 'none',
         }}
       />
@@ -132,7 +132,7 @@ const BuscadorProducto = ({
         value={query}
         onChange={(e) => cambiar(e.target.value)}
         onKeyDown={onKeyDown}
-        style={{ paddingLeft: '2.5rem', borderColor: 'var(--pos-primary)' }}
+        style={{ paddingLeft: '2.5rem', borderColor: 'var(--pos-accent)' }}
         autoComplete="off"
         role="combobox"
         aria-expanded={query.trim().length > 0 && !loading && results.length > 0}
@@ -263,7 +263,7 @@ const BuscadorProducto = ({
                   <span className="d-flex align-items-center gap-2">
                     <span
                       className="fw-bold small monto"
-                      style={{ color: resaltado ? '#fff' : 'var(--pos-primary)' }}
+                      style={{ color: resaltado ? '#fff' : 'var(--pos-accent)' }}
                     >
                       {esPadreP ? 'Desde ' : ''}
                       {formatQ(precioMin === Infinity ? 0 : precioMin)}

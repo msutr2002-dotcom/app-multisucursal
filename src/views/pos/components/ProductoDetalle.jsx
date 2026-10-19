@@ -147,7 +147,7 @@ const ProductoDetalle = ({
                 aria-label="Cantidad"
               />
               <span className="small text-body-secondary">total:</span>
-              <strong className="fs-6" style={{ color: 'var(--pos-primary)' }}>
+              <strong className="fs-6" style={{ color: 'var(--pos-accent)' }}>
                 {formatQ(subtotal)}
               </strong>
               <CButton

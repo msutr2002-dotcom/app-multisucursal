@@ -1306,7 +1306,6 @@ const POSPage = () => {
           <div className="mt-3">
             <Carrito
               items={carrito.items}
-              total={carrito.total}
               onCantidad={carrito.setCantidad}
               onRemove={(id, idUnidad) => {
                 // Localizar ANTES de borrar para poder ofrecer "Deshacer"

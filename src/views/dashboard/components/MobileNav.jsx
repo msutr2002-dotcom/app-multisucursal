@@ -89,7 +89,7 @@ const MobileNav = () => {
             className={({ isActive }) => `mobile-nav-fab${isActive ? ' active' : ''}`}
           >
             <span className="mobile-nav-fab-circle">{iconoMobile(pos.icon, 'xl')}</span>
-            <small>{pos.name}</small>
+            <small>{pos.shortName || pos.name}</small>
           </NavLink>
         )}
 

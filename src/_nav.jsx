@@ -99,6 +99,7 @@ const obtenerNav = () => {
     {
       component: CNavItem,
       name: 'Punto de Venta',
+      shortName: 'Vender',
       to: '/pos',
       icon: <CIcon icon={cilBasket} customClassName="nav-icon" />,
       modulo: 'pos',

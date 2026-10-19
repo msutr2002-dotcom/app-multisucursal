@@ -421,7 +421,11 @@ const ClientesPage = () => {
                             title="Ver detalle"
                             aria-label={`Ver detalle de ${c.name}`}
                           >
-                            <CIcon icon={cilList} className="me-1" style={{ color: '#0d7a5f' }} />
+                            <CIcon
+                              icon={cilList}
+                              className="me-1"
+                              style={{ color: 'var(--pos-success)' }}
+                            />
                             Ver
                           </CButton>
                           {puedeEditar && (

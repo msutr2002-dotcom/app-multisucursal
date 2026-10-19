@@ -38,11 +38,32 @@ Reportes del desarrollador tras desplegar a producción:
   - `fusionarPendientes`: recolectar también los eventos `DELETE` de `ventas` con `sync_status !== 'SYNCED'` (tombstones) y **excluir del servidor** los ids en esa lista (se devuelven solo los no borrados).
   - `POSPage`: refrescar la lista de pendientes también en `cola-sincronizada` (para que, al sincronizarse el DELETE, el contador/lista queden consistentes sin recargar).
 
+### F9 — Inventario lee el espejo del POS pero nunca lo hidrata ("productos que nunca aparecen")
+
+- **Dónde:** `src/views/inventario/InventarioPage.jsx`.
+- **Causa:** la página lee `db.productos` / `db.stock_bodega` (el espejo Offline-First del POS) pero **no lo hidrata ni escucha eventos**. `hidratarCatalogoParaSucursal` solo se llama en Login, POS, Historial y ModalPrecios — **no** desde Inventario, Productos ni Compras. Por eso los productos/stock creados **después** de la última hidratación **nunca** llegan al espejo y no aparecen en Inventario (recargar la página no re-hidrata: sigue leyendo el mismo Dexie viejo).
+- **Fix:**
+  - Al montar (y al cambiar empresa/bodega), con red: `await hidratarCatalogoParaSucursal(idSucursal)` y **luego** leer Dexie (así los productos nuevos ya están). Sin red: solo leer Dexie.
+  - Escuchar `cola-sincronizada` → **solo re-leer Dexie** (sin re-hidratar → sin bucle; `hidratarBodegas` emite ese evento, F7) y `online` → re-hidratar + leer.
+  - Token de secuencia el patrón del repo para evitar que una recarga vieja pise a la nueva.
+  - Marcar el estado sin conexión (banner/aviso) usando el `useEstadoRed` que hoy está importado pero sin usar.
+
+### F10 — Combos piden stock propio (debería ser disponibilidad derivada de las hojas)
+
+- **Dónde:** `src/views/admin/productos/ProductosTabla.jsx`, `ProductosTarjeta.jsx`, `Productos.jsx` (ModalStock) e `InventarioPage.jsx`.
+- **Causa:** un combo (`contiene_insumos = true`) se trata como vendible con stock propio (control `− n +` y modal de stock), pero **no tiene stock propio**: su disponibilidad es la derivada de sus componentes (p. ej. las hojas de papel). El propio modal ya lo dice, pero la UI lo contradice.
+- **Fix:**
+  - En Productos (tabla y tarjeta) y en Inventario: para combos, **ocultar** `− n +` y el `ModalStock`, y mostrar **"Disponible: N"** derivado de la receta (`disponibilidadCombo` de `src/views/pos/comboUtils.js`) con la etiqueta "Combo". Un combo no cuenta como "Stock bajo".
+  - Productos contenedores (con hijos) mantienen el comportamiento actual (stock = suma de variantes) y tampoco ofrecen stock propio (ya no lo hacían).
+  - Guard defensivo en `ModalStock`: si le llega un combo, no permitir guardar (no debería alcanzarse).
+
 ## Fuera de alcance
 
 - Expansión offline de combos (Task 5 de `combos-insumos`).
 - Cualquier cambio de schema/RPC/RLS.
 - Polling/WebSocket de pendientes: el refresco es por eventos locales + recargas ya existentes.
+- Agrupar padre/hijo en la lista de Inventario (se decidió no agrupar).
+- Disponibilidad derivada **por bodega** en Admin: se usa el stock de la sucursal (`productos_sucursal`), que es el total de la sucursal.
 
 ## Criterios de aceptación
 
@@ -51,6 +72,8 @@ Reportes del desarrollador tras desplegar a producción:
 3. Al eliminar una venta pendiente sincronizada, desaparece de la lista **sin** refrescar la página (y no reaparece por la fusión con el servidor).
 4. `npx eslint` de los archivos tocados = 0 nuevos; `npm run build` ✓.
 5. `memory.md` y `AGENTS.md` actualizados.
+6. Un producto creado/editado en Admin **aparece** en Inventario sin recargar (Inventario hidrata su espejo y reacciona a `cola-sincronizada`/`online`).
+7. En Inventario y en Productos (Admin), un **combo** muestra "Disponible: N" derivado y **no** ofrece `− n +`/modal de stock; un producto normal sigue igual.
 
 ## Riesgos
 

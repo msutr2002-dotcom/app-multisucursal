@@ -21,11 +21,12 @@ import {
 import { formatQ } from '../../../utils/format'
 import ImagenProducto from '../../../components/common/ImagenProducto'
 
-const PRECIO_VERDE = '#0d7a5f'
+const PRECIO_VERDE = 'var(--pos-success)'
 
 const ProductosTabla = ({
   productos,
   hijosPorPadre,
+  disponibilidadPorId,
   idSucursalActual,
   puedeEditar,
   puedeEliminar,
@@ -125,43 +126,53 @@ const ProductosTabla = ({
         <CTableDataCell
           className="border-bottom fw-semibold"
           style={{
-            color: margen == null ? undefined : margen > 0 ? PRECIO_VERDE : '#dc3545',
+            color: margen == null ? undefined : margen > 0 ? PRECIO_VERDE : 'var(--pos-danger)',
           }}
         >
           {margen == null ? '—' : `${margen}%`}
         </CTableDataCell>
 
-        {/* STOCK: − n +  (n clic → modal stock) */}
+        {/* STOCK: − n +  (n clic → modal stock). F10: un combo no tiene stock
+            propio → disponibilidad derivada de su receta, sin controles. */}
         <CTableDataCell className="border-bottom">
-          <div className="d-flex align-items-center justify-content-center gap-1">
-            <CButton
-              size="sm"
-              className="p-1 border-0"
-              style={{ background: 'rgba(13,122,95,0.12)', color: PRECIO_VERDE }}
-              disabled={!puedeEditar || stockMiSucursal <= 0}
-              aria-label={`Disminuir stock de ${p.name || 'la línea'}`}
-              onClick={() => onStockDelta(p, -1)}
-            >
-              <CIcon icon={cilMinus} />
-            </CButton>
-            <span
-              style={{ minWidth: '34px', textAlign: 'center', cursor: 'pointer' }}
-              title="Ver stock por sucursal"
-              onClick={() => onStock(p)}
-            >
-              {stockMiSucursal}
-            </span>
-            <CButton
-              size="sm"
-              className="p-1 border-0"
-              style={{ background: 'rgba(13,122,95,0.12)', color: PRECIO_VERDE }}
-              disabled={!puedeEditar}
-              aria-label={`Aumentar stock de ${p.name || 'la línea'}`}
-              onClick={() => onStockDelta(p, 1)}
-            >
-              <CIcon icon={cilPlus} />
-            </CButton>
-          </div>
+          {p.contiene_insumos ? (
+            <div className="d-flex align-items-center justify-content-center gap-1">
+              <CBadge color="info" className="text-dark">
+                Disponible: {disponibilidadPorId?.[p.id] ?? 0}
+              </CBadge>
+              <span className="small text-body-secondary">según receta</span>
+            </div>
+          ) : (
+            <div className="d-flex align-items-center justify-content-center gap-1">
+              <CButton
+                size="sm"
+                className="p-1 border-0"
+                style={{ background: 'rgba(13,122,95,0.12)', color: PRECIO_VERDE }}
+                disabled={!puedeEditar || stockMiSucursal <= 0}
+                aria-label={`Disminuir stock de ${p.name || 'la línea'}`}
+                onClick={() => onStockDelta(p, -1)}
+              >
+                <CIcon icon={cilMinus} />
+              </CButton>
+              <span
+                style={{ minWidth: '34px', textAlign: 'center', cursor: 'pointer' }}
+                title="Ver stock por sucursal"
+                onClick={() => onStock(p)}
+              >
+                {stockMiSucursal}
+              </span>
+              <CButton
+                size="sm"
+                className="p-1 border-0"
+                style={{ background: 'rgba(13,122,95,0.12)', color: PRECIO_VERDE }}
+                disabled={!puedeEditar}
+                aria-label={`Aumentar stock de ${p.name || 'la línea'}`}
+                onClick={() => onStockDelta(p, 1)}
+              >
+                <CIcon icon={cilPlus} />
+              </CButton>
+            </div>
+          )}
         </CTableDataCell>
 
         {/* ACCIONES */}

@@ -88,6 +88,29 @@ body {
   --cui-font-monospace:
     'IBM Plex Mono', ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono', monospace;
   --cui-body-font-family: var(--cui-font-sans-serif);
+
+  /* Tinta de acento para TEXTO (links, montos, precios): en tema claro es el
+     verde de marca; en oscuro sube de luminosidad para cumplir WCAG AA. */
+  --pos-accent: #0d7a5f;
+  --pos-accent-rgb: 13, 122, 95;
+
+  /* Tintas de estado para TEXTO (no fondos): se elevan en oscuro para AA. */
+  --pos-success: #0d7a5f;
+  --pos-danger: #b02a37;
+}
+
+/* Modo oscuro: el verde de marca (#0d7a5f) como TEXTO da ~2.8:1 sobre los
+   fondos oscuros → falla WCAG AA. El acento sube a un menta (~6.5:1) para
+   links, montos y precios; los FONDOS de marca conservan --pos-primary
+   intacto (cabecera de cobro, botones, hero). */
+[data-coreui-theme='dark'] {
+  --pos-accent: #45c79a;
+  --pos-accent-rgb: 69, 199, 154;
+  --pos-success: #4ec98a;
+  --pos-danger: #ef8a8a;
+  --cui-link-color: #45c79a;
+  --cui-link-color-rgb: 69, 199, 154;
+  --cui-link-hover-color: #6bd9b4;
 }
 
 /* ===== Cabecera del detalle de producto (POS) ===== */
@@ -122,6 +145,19 @@ h6,
 .h6 {
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+/* Superficies del navegador que también pertenecen al diseño: la selección de
+   texto y los controles nativos (checks, radios, sliders, barras) en la tinta
+   de marca. Es la señal más barata de que la página fue construida y no armada. */
+::selection {
+  background-color: var(--pos-primary);
+  color: #fff;
+}
+
+html {
+  accent-color: var(--pos-primary);
+  scrollbar-color: var(--cui-border-color) transparent;
 }
 
 /* Cifras de dinero: siempre monoespaciadas, como un recibo */
@@ -213,7 +249,7 @@ h6,
 }
 
 .mobile-nav-item.active {
-  color: var(--pos-primary);
+  color: var(--pos-accent);
   font-weight: 600;
 }
 
@@ -596,7 +632,7 @@ h6,
 
 .stat-label:hover,
 .stat-label:focus-visible {
-  color: var(--pos-primary);
+  color: var(--pos-accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -742,6 +778,12 @@ body.dark-mode .text-muted {
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
+/* `.text-primary` usa el verde de marca; en oscuro queda por debajo de AA como
+   texto → se eleva al acento menta. */
+[data-coreui-theme='dark'] .text-primary {
+  color: var(--pos-accent) !important;
+}
+
 /* Textos en fondos blancos (cards, modales): asegurar color oscuro para contraste */
 .pos-card-text,
 .card-text,
@@ -750,10 +792,10 @@ body.dark-mode .text-muted {
   color: rgba(0, 0, 0, 0.85) !important;
 }
 
-/* Precios y montos: mantener color primario para destacar */
+/* Precios y montos: acento de texto (verde en claro, menta AA en oscuro) */
 .pos-product-price,
 .monto {
-  color: var(--pos-primary) !important;
+  color: var(--pos-accent) !important;
 }
 
 /* Montos sobre fondos de color (cabecera teal de "Total a cobrar", barra de
@@ -805,4 +847,55 @@ body.dark-mode .btn-outline-secondary {
   background-color: transparent;
   border: 1px solid var(--cui-secondary-color);
   color: var(--cui-body-color);
+}
+
+/* ===== Contraste AA (auditoría): tinta sobre superficies oscuras ===== */
+
+/* El sidebar es tinta profunda en AMBOS temas: sus rótulos de sección deben
+   usar una tinta clara legible en los dos (7.4:1), no el gris de plantilla. */
+.sidebar .nav-title,
+.sidebar-dark .nav-title {
+  color: #9fb0aa !important;
+}
+
+/* Badges de conteo: info y amarillo son fondos claros → tinta oscura (AA en
+   ambos temas). El rojo se oscurece para que el blanco pase AA en los dos. */
+.badge.bg-info,
+.badge.bg-warning {
+  color: #14201b;
+}
+
+.badge.bg-danger {
+  background-color: #b0333f !important;
+}
+
+/* Texto de estado: CoreUI conserva la tinta de marca, ilegible sobre oscuro. */
+.text-success {
+  color: var(--pos-success) !important;
+}
+
+.text-danger {
+  color: var(--pos-danger) !important;
+}
+
+/* Botón outline primario en oscuro: su tinta (#12755c) falla sobre el fondo. */
+[data-coreui-theme='dark'] .btn-outline-primary {
+  --cui-btn-color: var(--pos-accent);
+  --cui-btn-border-color: var(--pos-accent);
+  --cui-btn-hover-bg: var(--pos-accent);
+  --cui-btn-hover-border-color: var(--pos-accent);
+  --cui-btn-hover-color: #08130f;
+  --cui-btn-active-bg: var(--pos-accent);
+  --cui-btn-active-border-color: var(--pos-accent);
+  --cui-btn-active-color: #08130f;
+}
+
+/* Superficies SIEMPRE claras (comprobante en pantalla/impresión y hoja de
+   reporte): el acento menta y las tintas de estado claras no tienen contraste
+   sobre papel blanco → vuelven a la tinta de marca profunda. */
+.comprobante-ticket,
+.reporte-impresion {
+  --pos-accent: var(--pos-primary);
+  --pos-success: #0d7a5f;
+  --pos-danger: #b02a37;
 }

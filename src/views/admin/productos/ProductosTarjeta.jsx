@@ -26,6 +26,7 @@ const precioNormalDe = (p) => {
 const ProductosTarjeta = ({
   productos,
   hijosPorPadre,
+  disponibilidadPorId,
   idSucursalActual,
   puedeEditar,
   puedeEliminar,
@@ -48,7 +49,10 @@ const ProductosTarjeta = ({
     const margen =
       precio != null && precio > 0 ? Math.round(((precio - costo) / precio) * 100) : null
     const stockMiSucursal = stockDe(p)
-    const sinStock = stockMiSucursal === 0
+    // F10: un combo no tiene stock propio → disponibilidad derivada de su receta.
+    const esCombo = !!p.contiene_insumos
+    const disponible = disponibilidadPorId?.[p.id] ?? 0
+    const sinStock = !esCombo && stockMiSucursal === 0
 
     return (
       <TarjetaRegistro
@@ -64,11 +68,19 @@ const ProductosTarjeta = ({
         }`}
         badge={
           <div className="d-flex gap-1 flex-wrap justify-content-end">
-            <CBadge color={sinStock ? 'danger' : 'success'}>{stockMiSucursal}</CBadge>
-            {sinStock && (
-              <CBadge color="warning" className="text-dark">
-                Sin stock
+            {esCombo ? (
+              <CBadge color="info" className="text-dark">
+                Disponible: {disponible}
               </CBadge>
+            ) : (
+              <>
+                <CBadge color={sinStock ? 'danger' : 'success'}>{stockMiSucursal}</CBadge>
+                {sinStock && (
+                  <CBadge color="warning" className="text-dark">
+                    Sin stock
+                  </CBadge>
+                )}
+              </>
             )}
           </div>
         }
@@ -97,22 +109,27 @@ const ProductosTarjeta = ({
               </span>
             ),
           },
-          {
-            label: 'Stock',
-            value: (
-              <CButton
-                color="link"
-                variant="text"
-                className="text-decoration-none p-0 d-flex align-items-center gap-1"
-                style={{ color: 'inherit' }}
-                aria-label={`Editar stock de ${p.name}`}
-                onClick={() => onStock(p)}
-              >
-                {stockMiSucursal}
-                <CIcon icon={cilPen} className="ms-1" style={{ fontSize: '0.75rem' }} />
-              </CButton>
-            ),
-          },
+          esCombo
+            ? {
+                label: 'Disponible',
+                value: <span title="Derivado de la receta">{disponible}</span>,
+              }
+            : {
+                label: 'Stock',
+                value: (
+                  <CButton
+                    color="link"
+                    variant="text"
+                    className="text-decoration-none p-0 d-flex align-items-center gap-1"
+                    style={{ color: 'inherit' }}
+                    aria-label={`Editar stock de ${p.name}`}
+                    onClick={() => onStock(p)}
+                  >
+                    {stockMiSucursal}
+                    <CIcon icon={cilPen} className="ms-1" style={{ fontSize: '0.75rem' }} />
+                  </CButton>
+                ),
+              },
         ]}
         acciones={
           <>

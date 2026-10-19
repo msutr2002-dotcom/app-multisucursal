@@ -10,10 +10,9 @@ const EstadoVacio = () => (
         icon={cilSearch}
         width={48}
         height={48}
-        style={{ color: 'var(--pos-primary)', opacity: 0.4 }}
+        style={{ color: 'var(--pos-accent)', opacity: 0.4 }}
       />
-      <p className="mt-3 mb-1 fw-semibold">Busca un producto para ver su detalle</p>
-      <p className="text-body-secondary small mb-0">Puedes buscar por nombre o marca</p>
+      <p className="mt-3 mb-0 fw-semibold">Busca un producto para ver su detalle</p>
     </CCardBody>
   </CCard>
 )

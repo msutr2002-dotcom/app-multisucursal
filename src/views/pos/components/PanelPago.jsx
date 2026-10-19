@@ -357,12 +357,12 @@ const PanelPago = ({
     <CCard className="border-0 shadow-sm">
       {/* ===== Header teal ===== */}
       <div className="p-3 text-white" style={{ backgroundColor: 'var(--pos-primary)' }}>
-        <div className="text-uppercase small opacity-75" style={{ letterSpacing: '0.05em' }}>
+        <div className="text-uppercase small" style={{ letterSpacing: '0.05em' }}>
           Total a cobrar
         </div>
         <div className="fs-2 fw-bold lh-sm monto monto-sobre-color">{formatQ(totalCobrar)}</div>
         {descuentoMonto > 0 && (
-          <div className="small opacity-75 mt-1">
+          <div className="small mt-1">
             Mayoreo {descuentoBp / 100}% — ahorro de {formatQ(descuentoMonto)}
           </div>
         )}

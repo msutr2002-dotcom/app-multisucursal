@@ -58,7 +58,7 @@ const ModalResultadoVenta = ({ resultado, onClose }) => {
           width={64}
           height={64}
           className="mb-3"
-          style={{ color: 'var(--pos-primary)' }}
+          style={{ color: 'var(--pos-accent)' }}
         />
 
         <h5 className="fw-bold mb-1">{resultado.titulo || '¡Venta realizada!'}</h5>
@@ -80,14 +80,14 @@ const ModalResultadoVenta = ({ resultado, onClose }) => {
         <div className="bg-body-secondary rounded p-3 mb-3">
           <div className="d-flex justify-content-between mb-1">
             <span className="text-body-secondary">Total</span>
-            <strong className="fs-5 monto" style={{ color: 'var(--pos-primary)' }}>
+            <strong className="fs-5 monto" style={{ color: 'var(--pos-accent)' }}>
               {formatQ(resultado.total)}
             </strong>
           </div>
           {resultado.cambio > 0 && (
             <div className="d-flex justify-content-between">
               <span className="text-body-secondary">Cambio</span>
-              <strong className="monto" style={{ color: 'var(--cui-success)' }}>
+              <strong className="monto" style={{ color: 'var(--pos-success)' }}>
                 {formatQ(resultado.cambio)}
               </strong>
             </div>

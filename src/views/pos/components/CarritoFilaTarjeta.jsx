@@ -67,7 +67,7 @@ const CarritoFilaTarjeta = ({ item, onCantidad, onRemove }) => {
         {
           label: 'Total',
           value: (
-            <strong className="monto" style={{ color: 'var(--pos-primary)' }}>
+            <strong className="monto" style={{ color: 'var(--pos-accent)' }}>
               {formatQ(item.subtotal)}
             </strong>
           ),

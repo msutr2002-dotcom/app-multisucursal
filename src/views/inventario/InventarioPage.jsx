@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   CCard,
   CCardBody,
@@ -22,10 +22,12 @@ import CIcon from '@coreui/icons-react'
 import { cilSearch, cilInbox } from '@coreui/icons'
 import { db } from '../../lib/db'
 import useEstadoRed from '../../hooks/useEstadoRed'
+import { hayRed } from '../../services/redService'
 import { formatQ } from '../../utils/format'
 import { useToast } from '../../components/common/ToastContext'
 import TarjetaRegistro from '../../components/common/TarjetaRegistro'
-import { leerStockPorBodega } from '../../services/catalogSyncService'
+import { leerStockPorBodega, hidratarCatalogoParaSucursal } from '../../services/catalogSyncService'
+import { agruparComponentes, disponibilidadCombo } from '../pos/comboUtils'
 
 const PAGE_SIZE = 25
 
@@ -78,14 +80,25 @@ const InventarioPage = () => {
     }
   }, [idSucursal])
 
-  useEffect(() => {
-    ;(async () => {
+  const secRef = useRef(0)
+
+  // F9 (fixes-prod): Inventario lee el espejo Offline-First del POS, pero antes
+  // no lo hidrataba ni escuchaba eventos → los productos creados después de la
+  // última hidratación (POS/Login/Historial) nunca aparecían. Ahora hidrata su
+  // espejo y reacciona a `cola-sincronizada`/`online`.
+  const cargar = useCallback(
+    async (hidratar = false) => {
+      const sec = ++secRef.current
       if (!idSucursal) {
         setCargando(false)
         return
       }
       try {
-        const [prods, cats, stocks] = await Promise.all([
+        if (hidratar && hayRed()) {
+          await hidratarCatalogoParaSucursal(idSucursal).catch(() => {})
+          if (sec !== secRef.current) return
+        }
+        const [prods, cats, stocks, stockSuc, comps, ings] = await Promise.all([
           db.productos.toArray(),
           db.categorias
             .where('id_empresa')
@@ -99,25 +112,110 @@ const InventarioPage = () => {
                 .where('[id_sucursal+id_producto]')
                 .between([idSucursal, ''], [idSucursal, '\uffff'])
                 .toArray(),
+          // F10: la disponibilidad de combos se calcula con el stock de la
+          // SUCURSAL (determinista tras la hidratación del catálogo; no depende
+          // de que `hidratarBodegas` haya terminado). `productos_sucursal` puede
+          // traer duplicados → se suman.
+          db.productos_sucursal
+            .where('[id_sucursal+id_producto]')
+            .between([idSucursal, ''], [idSucursal, '\uffff'])
+            .toArray(),
+          db.combo_componentes.toArray().catch(() => []),
+          db.ingredientes_sucursal
+            .where('id_sucursal')
+            .equals(idSucursal)
+            .toArray()
+            .catch(() => []),
         ])
+        if (sec !== secRef.current) return
+
         const stockMap = new Map(stocks.map((s) => [s.id_producto, s]))
         const catMap = new Map(cats.map((c) => [c.id, c.name]))
-        const lista = prods.map((p) => ({
-          ...p,
-          stockActual: stockMap.get(p.id)?.stock ?? 0,
-          stockMinimo: stockMap.get(p.id)?.stock_minimo ?? 0,
-          categoriaNombre: catMap.get(p.id_categoria) || '—',
-        }))
+        const componentesPorProducto = agruparComponentes(comps)
+        const ingredientesPorId = new Map(ings.map((s) => [s.id_ingrediente, s.stock ?? 0]))
+        const stockSucursalPorProducto = new Map()
+        stockSuc.forEach((s) =>
+          stockSucursalPorProducto.set(
+            s.id_producto,
+            (stockSucursalPorProducto.get(s.id_producto) || 0) + (s.stock || 0),
+          ),
+        )
+
+        // Primera pasada: stock propio (bodega/sucursal) y, para combos, la
+        // disponibilidad derivada de la receta (F10).
+        const base = prods.map((p) => {
+          const esCombo = !!p.contiene_insumos
+          const stockPropio = stockMap.get(p.id)?.stock ?? 0
+          return {
+            ...p,
+            esCombo,
+            stockPropio,
+            stockMostrado: esCombo
+              ? disponibilidadCombo(p.id, {
+                  componentesPorProducto,
+                  stockPorProducto: stockSucursalPorProducto,
+                  ingredientesPorId,
+                })
+              : stockPropio,
+            stockMinimo: stockMap.get(p.id)?.stock_minimo ?? 0,
+            categoriaNombre: catMap.get(p.id_categoria) || '—',
+          }
+        })
+
+        // Segunda pasada: un contenedor (con hijos) muestra la suma de sus hijos.
+        const hijosPorPadre = new Map()
+        base.forEach((p) => {
+          if (p.id_padre) {
+            const arr = hijosPorPadre.get(p.id_padre) || []
+            arr.push(p)
+            hijosPorPadre.set(p.id_padre, arr)
+          }
+        })
+        const lista = base.map((p) => {
+          const hijos = hijosPorPadre.get(p.id) || []
+          if (hijos.length) {
+            return {
+              ...p,
+              esContenedor: true,
+              stockMostrado: hijos.reduce((acc, h) => acc + (h.stockMostrado ?? 0), 0),
+            }
+          }
+          return p
+        })
+
         setProductos(lista)
         setCategorias(cats)
       } catch (e) {
+        if (sec !== secRef.current) return
         showToast('danger', 'Error', String(e?.message || e))
       } finally {
-        setCargando(false)
+        if (sec === secRef.current) setCargando(false)
       }
-    })()
+    },
+    [idSucursal, empresaId, bodegaId, showToast],
+  )
+
+  // Montar / cambiar empresa, sucursal o bodega: hidratar (si hay red) y leer.
+  useEffect(() => {
+    setTimeout(() => cargar(true), 0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idSucursal, empresaId, bodegaId])
+  }, [idSucursal, empresaId, bodegaId, enLinea])
+
+  // F9: reaccionar a la sincronización (productos/stock) y a la reconexión.
+  useEffect(() => {
+    const onSync = (e) => {
+      const t = e?.detail?.tabla
+      if (t && t !== 'stock_bodega' && t !== 'productos') return
+      cargar(false) // solo re-leer Dexie (sin re-hidratar → sin bucle)
+    }
+    const onOnline = () => cargar(true)
+    window.addEventListener('cola-sincronizada', onSync)
+    window.addEventListener('online', onOnline)
+    return () => {
+      window.removeEventListener('cola-sincronizada', onSync)
+      window.removeEventListener('online', onOnline)
+    }
+  }, [cargar])
 
   const filtrados = useMemo(() => {
     const q = busqueda.toLowerCase().trim()
@@ -136,7 +234,7 @@ const InventarioPage = () => {
   const paginaActual = Math.min(pagina, totalPaginas)
   const paginaProductos = filtrados.slice((paginaActual - 1) * PAGE_SIZE, paginaActual * PAGE_SIZE)
 
-  const stockBajo = (p) => p.stockActual <= p.stockMinimo
+  const stockBajo = (p) => !p.esCombo && !p.esContenedor && p.stockMostrado <= p.stockMinimo
 
   if (!idSucursal) {
     return (
@@ -201,6 +299,11 @@ const InventarioPage = () => {
               </CFormSelect>
             </CCol>
           )}
+          {!enLinea && (
+            <CCol xs={12}>
+              <small className="text-warning">Sin conexión — mostrando el espejo local.</small>
+            </CCol>
+          )}
         </CRow>
       </CCardHeader>
       <CCardBody>
@@ -238,10 +341,20 @@ const InventarioPage = () => {
                         <td>{p.name}</td>
                         <td>{p.categoriaNombre}</td>
                         <td>
-                          <CBadge color={bajo ? 'danger' : 'success'}>{p.stockActual}</CBadge>
+                          <CBadge color={bajo ? 'danger' : p.esCombo ? 'info' : 'success'}>
+                            {p.stockMostrado}
+                          </CBadge>
+                          {p.esCombo && (
+                            <span className="ms-1 small text-body-secondary">
+                              Disponible (combo)
+                            </span>
+                          )}
+                          {p.esContenedor && (
+                            <span className="ms-1 small text-body-secondary">Variantes</span>
+                          )}
                           {bajo && <span className="ms-1 small text-danger">Stock bajo</span>}
                         </td>
-                        <td>{p.stockMinimo}</td>
+                        <td>{p.esCombo || p.esContenedor ? '—' : p.stockMinimo}</td>
                         <td className="monto">
                           {p.precios && p.precios.length > 0 ? formatQ(p.precios[0].precio) : '—'}
                         </td>
@@ -267,7 +380,14 @@ const InventarioPage = () => {
                     }
                     badge={
                       <div className="d-flex gap-1 flex-wrap justify-content-end">
-                        <CBadge color={bajo ? 'danger' : 'success'}>{p.stockActual}</CBadge>
+                        <CBadge color={bajo ? 'danger' : p.esCombo ? 'info' : 'success'}>
+                          {p.stockMostrado}
+                        </CBadge>
+                        {p.esCombo && (
+                          <CBadge color="info" className="text-dark">
+                            Combo
+                          </CBadge>
+                        )}
                         {bajo && (
                           <CBadge color="warning" className="text-dark">
                             Stock bajo
@@ -276,8 +396,14 @@ const InventarioPage = () => {
                       </div>
                     }
                     campos={[
-                      { label: 'Stock', value: p.stockActual },
-                      { label: 'Stock mín.', value: p.stockMinimo },
+                      {
+                        label: p.esCombo ? 'Disponible' : 'Stock',
+                        value: p.stockMostrado,
+                      },
+                      {
+                        label: 'Stock mín.',
+                        value: p.esCombo || p.esContenedor ? '—' : p.stockMinimo,
+                      },
                       {
                         label: 'Precio',
                         value: (

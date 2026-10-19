@@ -66,7 +66,7 @@ const CarritoFila = ({ item, onCantidad, onRemove }) => {
       </td>
 
       {/* TOTAL */}
-      <td className="text-center fw-bold monto" style={{ color: 'var(--pos-primary)' }}>
+      <td className="text-center fw-bold monto" style={{ color: 'var(--pos-accent)' }}>
         {formatQ(item.subtotal)}
       </td>
 

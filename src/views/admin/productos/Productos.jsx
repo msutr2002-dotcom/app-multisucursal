@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../../lib/supabase'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilWarning } from '@coreui/icons'
@@ -31,6 +31,7 @@ import {
   hidratarIngredientes,
   hidratarFlagsSucursal,
 } from '../../../services/catalogSyncService'
+import { agruparComponentes, disponibilidadCombo } from '../../pos/comboUtils'
 
 const Productos = () => {
   const puedeCrear = usePermission('productos', 'crear')
@@ -284,6 +285,30 @@ const Productos = () => {
     }
   })
 
+  // F10: disponibilidad derivada de combos (receta + stock de la sucursal).
+  const disponibilidadPorId = useMemo(() => {
+    const stockPorProducto = new Map()
+    productos.forEach((p) => {
+      const s = (p.stock || []).find((x) => x.id_sucursal === idSucursalActual)
+      stockPorProducto.set(p.id, s?.stock ?? 0)
+    })
+    const componentesPorProducto = agruparComponentes(
+      productos.flatMap((p) => (p.componentes || []).map((c) => ({ ...c, id_producto: p.id }))),
+    )
+    const ingredientesPorId = new Map(ingredientes.map((i) => [i.id, i.stock ?? 0]))
+    const mapa = {}
+    productos.forEach((p) => {
+      if (p.contiene_insumos) {
+        mapa[p.id] = disponibilidadCombo(p.id, {
+          componentesPorProducto,
+          stockPorProducto,
+          ingredientesPorId,
+        })
+      }
+    })
+    return mapa
+  }, [productos, idSucursalActual, ingredientes])
+
   const coincide = (p) => {
     const q = busqueda.toLowerCase()
     const okBusq =
@@ -385,6 +410,7 @@ const Productos = () => {
               <ProductosTabla
                 productos={filtrados}
                 hijosPorPadre={hijosPorPadre}
+                disponibilidadPorId={disponibilidadPorId}
                 idSucursalActual={idSucursalActual}
                 puedeEditar={puedeEditar}
                 puedeEliminar={puedeEliminar}
@@ -409,6 +435,7 @@ const Productos = () => {
               <ProductosTarjeta
                 productos={filtrados}
                 hijosPorPadre={hijosPorPadre}
+                disponibilidadPorId={disponibilidadPorId}
                 idSucursalActual={idSucursalActual}
                 puedeEditar={puedeEditar}
                 puedeEliminar={puedeEliminar}

@@ -7,6 +7,7 @@ import {
   CModalFooter,
   CButton,
   CSpinner,
+  CAlert,
 } from '@coreui/react'
 import { supabase } from '../../../lib/supabase'
 import { useToast } from '../../../components/common/ToastContext'
@@ -49,6 +50,10 @@ const ModalStock = ({ visible, onClose, producto, onCambio, idSucursalActual }) 
     )
   }
 
+  // F10 (fixes-prod): un combo no tiene stock propio (su disponibilidad es la
+  // derivada de la receta). Defensa: no permitir guardar stock de un combo.
+  const esCombo = !!producto?.contiene_insumos
+
   const guardar = async () => {
     setGuardando(true)
     try {
@@ -83,6 +88,12 @@ const ModalStock = ({ visible, onClose, producto, onCambio, idSucursalActual }) 
           </div>
         ) : (
           <>
+            {esCombo && (
+              <CAlert color="info" className="py-2 small">
+                Este producto es un <strong>combo</strong> y no tiene stock propio: su
+                disponibilidad se calcula desde los componentes de su receta.
+              </CAlert>
+            )}
             <div className="d-flex small fw-bold text-body-secondary border-bottom pb-1 mb-2">
               <div className="flex-grow-1">Sucursal</div>
               <div style={{ width: '90px' }} className="text-center">
@@ -126,7 +137,7 @@ const ModalStock = ({ visible, onClose, producto, onCambio, idSucursalActual }) 
         <CButton
           color="success"
           onClick={guardar}
-          disabled={guardando || cargando || filas.length === 0}
+          disabled={guardando || cargando || filas.length === 0 || esCombo}
         >
           {guardando ? 'Guardando...' : 'Guardar Stock'}
         </CButton>

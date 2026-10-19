@@ -2,13 +2,11 @@ import React from 'react'
 import { CCard, CCardHeader, CCardBody, CButton, CBadge } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilBasket, cilBookmark, cilList, cilTrash } from '@coreui/icons'
-import { formatQ } from '../../../utils/format'
 import CarritoFila from './CarritoFila'
 import CarritoFilaTarjeta from './CarritoFilaTarjeta'
 
 const Carrito = ({
   items,
-  total,
   onCantidad,
   onRemove,
   onClear,
@@ -102,13 +100,6 @@ const Carrito = ({
           ))}
         </div>
       )}
-
-      <div className="p-3 border-top d-flex justify-content-between align-items-center">
-        <span className="fs-5 fw-bold">Total</span>
-        <span className="fs-4 fw-bold monto" style={{ color: 'var(--pos-primary)' }}>
-          {formatQ(total)}
-        </span>
-      </div>
     </CCard>
   )
 }

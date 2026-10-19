@@ -280,7 +280,10 @@ const IngredientesPage = () => {
                         <CButton
                           size="sm"
                           className="p-1 border-0"
-                          style={{ background: 'rgba(13,122,95,0.12)', color: '#0d7a5f' }}
+                          style={{
+                            background: 'rgba(13,122,95,0.12)',
+                            color: 'var(--pos-success)',
+                          }}
                           disabled={!puedeEditar || (i.stock ?? 0) <= 0}
                           onClick={() => cambiarStock(i, -1)}
                         >
@@ -292,7 +295,10 @@ const IngredientesPage = () => {
                         <CButton
                           size="sm"
                           className="p-1 border-0"
-                          style={{ background: 'rgba(13,122,95,0.12)', color: '#0d7a5f' }}
+                          style={{
+                            background: 'rgba(13,122,95,0.12)',
+                            color: 'var(--pos-success)',
+                          }}
                           disabled={!puedeEditar}
                           onClick={() => cambiarStock(i, 1)}
                         >
